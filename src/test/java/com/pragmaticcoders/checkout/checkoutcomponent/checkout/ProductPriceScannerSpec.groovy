@@ -26,6 +26,22 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
+    Should "throw ProductNotFoundException when given name is not name of existing product"() {
+
+        given: "name of not existing product"
+            def nonExistingProductName = "nonExistingProductName"
+
+        and: "repository can't find such a product and return null instead"
+            productRepository.findByName(nonExistingProductName) >> null
+
+        when: "trying to find actual price for product"
+            producteService.findActualPriceForProduct(nonExistingProductName)
+        then:
+            ProductNotFoundException exception = thrown()
+            exception.message = "Product with name '" + nonExistingProductName + "' does not exists"
+
+    }
+
 
     def createSampleProduct() {
 
