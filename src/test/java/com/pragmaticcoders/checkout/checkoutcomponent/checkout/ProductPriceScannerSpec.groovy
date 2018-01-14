@@ -38,7 +38,7 @@ class ProductPriceScannerSpec extends Specification {
             producteService.findActualPriceForProduct(nonExistingProductName)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message = "Product with name '" + nonExistingProductName + "' does not exists"
+            exception.message == "Product with name " + nonExistingProductName + " does not exists"
 
     }
 

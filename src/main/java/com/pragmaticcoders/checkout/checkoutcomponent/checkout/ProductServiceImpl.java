@@ -13,8 +13,10 @@ class ProductServiceImpl implements ProductService {
         this.productRepository = productRepository;
     }
 
-    @Override public Double findActualPriceForProduct(String productName) {
+    @Override public Double findActualPriceForProduct(String productName) throws ProductNotFoundException {
         Optional<Product> product = Optional.ofNullable(productRepository.findByName(productName));
-        return product.map(product1 -> product1.getPrice()).orElse(0.0);
+        return product
+                .map(product1 -> product1.getPrice())
+                .orElseThrow(() -> new ProductNotFoundException(productName));
     }
 }
