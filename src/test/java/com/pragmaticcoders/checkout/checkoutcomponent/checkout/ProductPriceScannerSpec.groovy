@@ -1,4 +1,4 @@
-package com.pragmaticcoders.checkout.checkoutcomponent
+package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
 import spock.lang.Specification
 
@@ -17,14 +17,12 @@ class ProductPriceScannerSpec extends Specification {
             def productName = sampleProductToCheck.getName()
 
         and: "this product is correctly returned from database"
-            productRepository.find() >> createSampleProduct()
+            productRepository.findByName(productName) >> createSampleProduct()
 
         when: "trying to find actual price for product"
-            def resultPrice = producteService.findPrice(productName)
-
+            def resultPrice = producteService.findActualPriceForProduct(productName)
         then:
             resultPrice == sampleProductToCheck.getPrice()
-
 
     }
 
@@ -34,8 +32,7 @@ class ProductPriceScannerSpec extends Specification {
         Product product = new Product()
         product.setName("toothbrush")
         product.setPrice(5.0)
-        product.amountInStorage(10)
-
+        product.setAmountInStorage(10)
 
         return product
     }
