@@ -59,16 +59,15 @@ class PromoServiceSpec extends Specification {
     Should "return all promotions for given product"() {
         given: "product name"
             def productName = sampleProductToCheck.getName()
-        and: "there exists #amountOfPromotions"
+        and: "there exists some promotions for this product"
             def manyPromosForSampleProduct = createManyPromosForSampleProduct()
-            promoRepository.findByProductName(productName) >> manyPromosForSampleProduct
         when:
             def allResults = promoService.getAllPromotionsForProduct(productName)
         then:
-            allResults.isNotEmpty()
+            !allResults.isEmpty()
             allResults.size() == manyPromosForSampleProduct.size()
-            1 * productRepository.findByName(productName)
-            1 * promoRepository.findByProductName()
+            1 * productRepository.findByName(productName) >> sampleProductToCheck
+            1 * promoRepository.findByProductName(productName) >> manyPromosForSampleProduct
     }
 
     Should "throw ProductNotFoundException when product name doesn't exists when getting all promotions"() {

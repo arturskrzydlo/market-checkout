@@ -2,6 +2,8 @@ package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 class PromoServiceImpl implements PromoService {
 
     private PromoRepository promoRepository;
@@ -16,10 +18,8 @@ class PromoServiceImpl implements PromoService {
     @Override public Promo createMultiPricedPromo(String productName, Integer unitAmount, Double specialPrice)
             throws ProductNotFoundException {
 
-        Product product = productRepository.findByName(productName);
-        if (product == null) {
-            throw new ProductNotFoundException(productName);
-        }
+        Product product = getProductByProductName(productName);
+
         Promo promo = new Promo();
         promo.addProduct(product);
         promo.setSpecialPrice(specialPrice);
@@ -27,5 +27,21 @@ class PromoServiceImpl implements PromoService {
 
         promoRepository.save(promo);
         return promo;
+    }
+
+    @Override public List<Promo> getAllPromotionsForProduct(String productName) throws ProductNotFoundException {
+        getProductByProductName(productName);
+        List<Promo> promos = promoRepository.findByProductName(productName);
+        return promos;
+    }
+
+    private Product getProductByProductName(String productName) throws ProductNotFoundException {
+
+        Product product = productRepository.findByName(productName);
+        if (product == null) {
+            throw new ProductNotFoundException(productName);
+        }
+
+        return product;
     }
 }
