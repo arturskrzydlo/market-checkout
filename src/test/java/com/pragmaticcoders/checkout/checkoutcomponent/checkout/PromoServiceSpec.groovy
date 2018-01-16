@@ -9,15 +9,15 @@ class PromoServiceSpec extends Specification {
     def sampleProductToCheck = createSampleProduct()
     def samplePromo = createSamplePromo()
     def productRepository = Mock(ProductRepository)
-    def promoRepository = Mock(Promo)
-    def promoService = new PromoServiceImpl(productRepository)
+    def promoRepository = Mock(PromoRepository)
+    def promoService = new PromoServiceImpl(promoRepository, productRepository)
 
 
     Should "sucessfully create multi-priced promo for specified amount of units"() {
 
         given: "sample product on which promo should be applied"
         and: "amount of product units, until where promo will be applied"
-            def unitsAmount = samplePromo.getUnits()
+            def unitsAmount = samplePromo.getUnitAmount()
         and: "price for product when reach required units number"
             def specialPrice = samplePromo.getSpecialPrice()
         and: "product on which promo will be applied exists"
@@ -28,16 +28,19 @@ class PromoServiceSpec extends Specification {
         then:
             1 * promoRepository.save(_) >> {
                 Promo promo ->
-                    assert promo.getUnits == unitsAmount
-                    assert promo.getSpecialPrice == specialPrice
-                    asssert promo.getProducts.contains(sampleProductToCheck)
+                    assert promo.getUnitAmount() == unitsAmount
+                    assert promo.getSpecialPrice() == specialPrice
+                    assert promo.getProducts().contains(sampleProductToCheck)
                     return samplePromo
             }
+            1 * productRepository.findByName(sampleProductToCheck.getName()) >> sampleProductToCheck
+
+
     }
 
     def createSamplePromo() {
         Promo promo = new Promo()
-        promo.setUnits(5)
+        promo.setUnitAmount(5)
         promo.setSpecialPrice(20)
         promo.addProduct(createSampleProduct())
 

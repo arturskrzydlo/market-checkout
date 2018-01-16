@@ -1,9 +1,11 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 class ProductServiceImpl implements ProductService {
 
     private ProductRepository productRepository;
