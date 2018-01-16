@@ -14,6 +14,7 @@ import java.util.Set;
 @Setter
 @EqualsAndHashCode(exclude = "promos") class Product extends AbstractDomainClass {
 
+    //TODO: is it really good to get product by product name ?
     private String name;
     private Double price;
     private int amountInStorage;

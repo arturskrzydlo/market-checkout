@@ -38,6 +38,22 @@ class PromoServiceSpec extends Specification {
 
     }
 
+    Should "throw ProductNotFoundException when product name doesn't exists"() {
+        given: "sample product name which doesn't exists"
+            def productName = "notExistingProductName"
+        and: "amount of product units, until where promo will be applied"
+            def unitsAmount = samplePromo.getUnitAmount()
+        and: "price for product when reach required units number"
+            def specialPrice = samplePromo.getSpecialPrice()
+        and: "product on which promo will be applied exists"
+            productRepository.findByName(sampleProductToCheck.getName()) >> null
+        when:
+            promoService.createMultiPricedPromo(productName, unitsAmount, specialPrice)
+        then:
+            ProductNotFoundException exception = thrown()
+            exception.message == "Product with name " + productName + " does not exists"
+    }
+
     def createSamplePromo() {
         Promo promo = new Promo()
         promo.setUnitAmount(5)
