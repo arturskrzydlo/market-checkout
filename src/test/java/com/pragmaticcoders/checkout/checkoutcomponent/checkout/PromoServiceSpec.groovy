@@ -82,6 +82,7 @@ class PromoServiceSpec extends Specification {
             exception.message == "Product with name " + productName + " does not exists"
     }
 
+
     def createSamplePromo() {
         Promo promo = new Promo()
         promo.setUnitAmount(5)
