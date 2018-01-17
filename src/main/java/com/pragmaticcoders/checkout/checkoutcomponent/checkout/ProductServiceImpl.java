@@ -23,6 +23,11 @@ import java.util.*;
 
     @Override public Double countProductPriceWithPromotions(String productName, int quantity)
             throws ProductNotFoundException {
+
+        if (quantity < 1) {
+            return 0.0;
+        }
+
         Optional<Product> product = Optional.ofNullable(productRepository.findByName(productName));
         return product
                 .map(prod -> applyPromotionsOnProductPrice(prod, quantity))

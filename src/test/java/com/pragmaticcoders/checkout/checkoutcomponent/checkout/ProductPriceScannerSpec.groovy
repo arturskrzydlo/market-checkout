@@ -60,7 +60,7 @@ class ProductPriceScannerSpec extends Specification {
     }
 
     @Unroll
-    Should "get real product price after promotions application for #quantity of #productName"() {
+    Should "get real product price after promotions application for #quantity unit of product"() {
         given: "product name"
             def productName = sampleProductToCheck.getName()
         and: "product with 3 multipriced promos"
@@ -74,7 +74,6 @@ class ProductPriceScannerSpec extends Specification {
             result == finalPrice
         where:
             quantity | finalPrice
-            0        | 0
             1        | productPrice
             5        | promo3.getSpecialPrice()
             7        | promo3.getSpecialPrice() + 2 * productPrice
@@ -82,10 +81,43 @@ class ProductPriceScannerSpec extends Specification {
             11       | promo1.getSpecialPrice() + productPrice
             15       | promo1.getSpecialPrice() + promo3.getSpecialPrice()
             20       | promo2.getSpecialPrice()
-            30       | promo2.getSpecialPrice() + promo1.getSpecialPrice() //always get more beneficial to customer promotion
+            30       | promo2.getSpecialPrice() + promo1.getSpecialPrice()
             100      | 5 * promo2.getSpecialPrice()
             115      | 5 * promo2.getSpecialPrice() + promo1.getSpecialPrice() + promo3.getSpecialPrice()
 
+    }
+
+    Should "return 0 price, when quantity is less then 1"() {
+        given: "product name"
+            def productName = sampleProductToCheck.getName()
+        and: "product with 3 multipriced promos"
+            sampleProductToCheck.addPromo(promo1)
+            sampleProductToCheck.addPromo(promo2)
+            sampleProductToCheck.addPromo(promo3)
+        when:
+            def result = producteService.countProductPriceWithPromotions(productName, quantity)
+        then:
+            0 * productRepository.findByName(productName) >> sampleProductToCheck
+            result == finalPrice
+        where:
+            quantity | finalPrice
+            -1       | 0
+            0        | 0
+    }
+
+    Should "throw ProductNotFoundException when product name does not exists"() {
+
+        given: "name of not existing product"
+            def nonExistingProductName = "nonExistingProductName"
+
+        and: "repository can't find such a product and return null instead"
+            productRepository.findByName(nonExistingProductName) >> null
+
+        when: "trying to find actual price for product"
+            producteService.countProductPriceWithPromotions(nonExistingProductName, 1)
+        then:
+            ProductNotFoundException exception = thrown()
+            exception.message == "Product with name " + nonExistingProductName + " does not exists"
     }
 
 
