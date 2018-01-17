@@ -53,9 +53,23 @@ class ProductControllerSpec extends Specification {
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(0)))
     }
 
+    Should "return actual price for a given, existing product name "() {
+        given:
+            def product = createProductList()[0]
+        when:
+            def result = this.mockMvc.perform(get("/products/" + product.getName()))
+        then:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.price').value(is(product.getPrice())))
+                    .andExpect(jsonPath('$.*').value(Matchers.hasSize(1)))
+        and:
+            1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
+    }
+
     def createProductList() {
 
-        Product product1 = new Product();
+        Product product1 = new Product()
         product1.setId(1)
         product1.setName("toothbrush")
         product1.setPrice(5.0)
