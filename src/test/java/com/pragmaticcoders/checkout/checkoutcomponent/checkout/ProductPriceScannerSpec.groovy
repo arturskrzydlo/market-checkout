@@ -1,17 +1,31 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
+import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.lang.Void as Should
 
 class ProductPriceScannerSpec extends Specification {
 
-    def sampleProductToCheck = createSampleProduct()
+    def sampleProductToCheck
     def productRepository = Mock(ProductRepository)
     def producteService = new ProductServiceImpl(productRepository)
+
+    @Shared
     def promo1
+    @Shared
     def promo2
+    @Shared
     def promo3
+    @Shared
+    def productPrice = createSampleProduct().getPrice()
+
+    //TODO fix to be possible to run just one test
+    def setup() {
+        sampleProductToCheck = createSampleProduct()
+        createManyPromosForSampleProduct()
+    }
 
 
     Should "Return actual price of given product"() {
@@ -45,28 +59,32 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
-    Should "get real product price after promotions application"() {
+    @Unroll
+    Should "get real product price after promotions application for #quantity of #productName"() {
         given: "product name"
             def productName = sampleProductToCheck.getName()
-        and: "quantity in order"
-            def quantity = 10
+        and: "product with 3 multipriced promos"
+            sampleProductToCheck.addPromo(promo1)
+            sampleProductToCheck.addPromo(promo2)
+            sampleProductToCheck.addPromo(promo3)
         when:
-            finalPrice = producteService.countProductPriceWithPromotions(productName, quantity)
+            def result = producteService.countProductPriceWithPromotions(productName, quantity)
         then:
             1 * productRepository.findByName(productName) >> sampleProductToCheck
+            result == finalPrice
         where:
             quantity | finalPrice
             0        | 0
-            1        | sampleProductToCheck.getPrice()
-            5        | promo3.getPrice()
-            7        | promo3.getPrice() + 2 * sampleProductToCheck
-            10       | promo1.getPrice()
-            11       | promo1.getPrice + sampleProductToCheck
-            15       | promo1.getPrice + promo3.getPrice
-            20       | promo2.getPrice()
-            30       | promo2.getPrice + promo1.getPrice() //always get more beneficial to customer promotion
-            100      | 5 * promo2.getPrice
-            115      | 5 * promo2.getPrice + promo1.getPrice() + promo3.getPrice
+            1        | productPrice
+            5        | promo3.getSpecialPrice()
+            7        | promo3.getSpecialPrice() + 2 * productPrice
+            10       | promo1.getSpecialPrice()
+            11       | promo1.getSpecialPrice() + productPrice
+            15       | promo1.getSpecialPrice() + promo3.getSpecialPrice()
+            20       | promo2.getSpecialPrice()
+            30       | promo2.getSpecialPrice() + promo1.getSpecialPrice() //always get more beneficial to customer promotion
+            100      | 5 * promo2.getSpecialPrice()
+            115      | 5 * promo2.getSpecialPrice() + promo1.getSpecialPrice() + promo3.getSpecialPrice()
 
     }
 

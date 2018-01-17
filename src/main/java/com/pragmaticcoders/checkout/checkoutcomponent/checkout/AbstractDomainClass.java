@@ -6,8 +6,7 @@ import java.util.Date;
 /**
  * Created by jt on 12/16/15.
  */
-@MappedSuperclass
-public class AbstractDomainClass {
+@MappedSuperclass class AbstractDomainClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
