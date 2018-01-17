@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service class ProductServiceImpl implements ProductService {
 
@@ -32,6 +34,11 @@ import java.util.*;
         return product
                 .map(prod -> applyPromotionsOnProductPrice(prod, quantity))
                 .orElseThrow(() -> new ProductNotFoundException(productName));
+    }
+
+    @Override public List<Product> getAllProducts() {
+        return StreamSupport.stream(productRepository.findAll().spliterator(), false)
+                .collect(Collectors.toList());
     }
 
     private static Double applyPromotionsOnProductPrice(Product product, int quantity) {

@@ -3,10 +3,12 @@ package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 import org.hamcrest.Matchers
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
+import spock.mock.DetachedMockFactory
 
 import java.lang.Void as Should
 
@@ -19,37 +21,36 @@ class ProductControllerSpec extends Specification {
     @Autowired
     private MockMvc mockMvc
 
-    @MockBean
+    @Autowired
     private ProductService productService
 
-    @MockBean
+    @Autowired
     private PromoService promoService
 
-/*    Should "return json with all existing products"() {
+    Should "return json with all existing products"() {
 
         given: "preloaded products to application database"
             def products = createProductList()
         when:
-            def result = this.mockMvc.perform(get("/checkout/products"))
+            def result = this.mockMvc.perform(get("/products"))
         then:
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(products.size())))
         and:
-            1 * productService.getAllProducts(_) >> products
-
-    }*/
+            1 * productService.getAllProducts() >> products
+    }
 
     Should "return json with no products when products were not preloaded to application"() {
 
+        given:
+            productService.getAllProducts() >> new ArrayList<Product>()
         when:
             def result = this.mockMvc.perform(get("/products"))
         then:
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(0)))
-
-
     }
 
     def createProductList() {
@@ -66,5 +67,20 @@ class ProductControllerSpec extends Specification {
 
         [product1, product2]
 
+    }
+
+    @TestConfiguration
+    static class MockConfig {
+        def detachedMockFactory = new DetachedMockFactory()
+
+        @Bean
+        ProductService productService() {
+            return detachedMockFactory.Mock(ProductService)
+        }
+
+        @Bean
+        PromoService promoService() {
+            return detachedMockFactory.Mock(PromoService)
+        }
     }
 }
