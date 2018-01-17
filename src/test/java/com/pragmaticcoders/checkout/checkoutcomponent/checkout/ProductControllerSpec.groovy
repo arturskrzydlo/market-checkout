@@ -14,6 +14,7 @@ import spock.mock.DetachedMockFactory
 import java.lang.Void as Should
 
 import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.hasSize
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -69,10 +70,10 @@ class ProductControllerSpec extends Specification {
             1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
     }
 
-    Should "return bad request for not existing product name"() {
+    Should "return HttpStatus.NOT_FOUND for not existing product name"() {
 
         given:
-            def productName = "notExisintProduct"
+            def productName = "notExistingProduct"
         when:
             def result = this.mockMvc.perform(get("/products/" + productName))
         then:
@@ -80,6 +81,9 @@ class ProductControllerSpec extends Specification {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
                     .andExpect(jsonPath('$.timestamp').isNotEmpty())
+                    .andExpect(jsonPath('$.message').isNotEmpty())
+                    .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
+                    .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(productName)))
         and:
             1 * productService.findActualPriceForProduct(productName) >> {
                 throw new ProductNotFoundException(productName)

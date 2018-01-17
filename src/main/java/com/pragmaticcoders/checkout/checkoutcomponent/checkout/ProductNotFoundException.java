@@ -11,4 +11,8 @@ class ProductNotFoundException extends Exception {
         super(MessageFormat.format(MESSAGE, productName));
         this.productName = productName;
     }
+
+    public String getProductName() {
+        return productName;
+    }
 }
