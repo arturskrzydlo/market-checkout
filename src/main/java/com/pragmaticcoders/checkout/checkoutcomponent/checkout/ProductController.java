@@ -24,7 +24,7 @@ import java.util.Map;
 
     @GetMapping(value = "/{productName}", params = {"quantity"})
     public Map<String, Double> getProductPriceWithDiscounts(@PathVariable String productName,
-            @RequestParam Integer quantity)
+            @RequestParam(defaultValue = "1") Integer quantity)
             throws ProductNotFoundException {
 
         return Collections.singletonMap("price", productService.countProductPriceWithPromotions(productName, quantity));
