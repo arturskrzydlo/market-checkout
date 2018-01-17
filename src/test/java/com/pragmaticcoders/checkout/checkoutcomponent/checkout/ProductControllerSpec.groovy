@@ -61,7 +61,7 @@ class ProductControllerSpec extends Specification {
         when:
             def result = this.mockMvc.perform(get("/products/" + product.getName()))
         then:
-            result.andExpect(status().isNotFound())
+            result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.price').value(product.getPrice()))
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(1)))
@@ -76,7 +76,7 @@ class ProductControllerSpec extends Specification {
         when:
             def result = this.mockMvc.perform(get("/products/" + productName))
         then:
-            result.andExpect(status().isOk())
+            result.andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
                     .andExpect(jsonPath('$.timestamp').isNotEmpty())
