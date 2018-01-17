@@ -6,5 +6,5 @@ import java.util.List;
 
 interface PromoRepository extends CrudRepository<Promo, Integer> {
 
-    List<Promo> findByProductName(String productName);
+    List<Promo> findByProducts_Name(String productName);
 }

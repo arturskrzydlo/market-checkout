@@ -5,3 +5,4 @@ spring:
             path: /console/
 server:
   port: 8080
+  context-path: /checkout

@@ -31,7 +31,7 @@ class PromoServiceImpl implements PromoService {
 
     @Override public List<Promo> getAllPromotionsForProduct(String productName) throws ProductNotFoundException {
         getProductByProductName(productName);
-        List<Promo> promos = promoRepository.findByProductName(productName);
+        List<Promo> promos = promoRepository.findByProducts_Name(productName);
         return promos;
     }
 
