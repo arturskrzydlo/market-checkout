@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-public class UnixTimestampDeserializer extends JsonDeserializer<LocalDateTime> {
+class UnixTimestampDeserializer extends JsonDeserializer<LocalDateTime> {
 
     @Override
     public LocalDateTime deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException {

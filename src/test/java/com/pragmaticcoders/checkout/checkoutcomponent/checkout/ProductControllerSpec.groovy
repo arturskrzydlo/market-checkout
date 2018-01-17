@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -65,7 +66,7 @@ class ProductControllerSpec extends Specification {
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.price').value(product.getPrice()))
-                    .andExpect(jsonPath('$.*').value(Matchers.hasSize(1)))
+                    .andExpect(jsonPath('$.*').value(hasSize(1)))
         and:
             1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
     }
@@ -88,6 +89,27 @@ class ProductControllerSpec extends Specification {
             1 * productService.findActualPriceForProduct(productName) >> {
                 throw new ProductNotFoundException(productName)
             }
+    }
+
+    Should "return price for given existing product name which has no promos assigned to"() {
+
+        given: "product with no promotions"
+            def product = createProductList()[0]
+        and: "product quantity"
+            def quantity = 10
+        and: "expected product price"
+            def expectedProductPrice = product.getPrice() * quantity
+        when:
+            def result = mockMvc.perform(MockMvcRequestBuilders.get("/products/" + product.getName() + "?quantity=" + quantity))
+
+        then:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.price').value(expectedProductPrice))
+                    .andExpect(jsonPath('$.*').value(hasSize(1)))
+        and:
+            1 * productService.countProductPriceWithPromotions(product.getName(), quantity) >> expectedProductPrice
+
     }
 
 

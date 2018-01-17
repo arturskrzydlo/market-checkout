@@ -8,11 +8,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.Collections;
 
-/**
- * Created by artur.skrzydlo on 2017-05-14.
- */
-@ControllerAdvice
-public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler {
+
+@ControllerAdvice class RestResponseExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
     protected ResponseEntity<Object> handleProductNotFoundException(ProductNotFoundException exc) {
