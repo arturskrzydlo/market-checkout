@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
@@ -12,6 +13,7 @@ import spock.mock.DetachedMockFactory
 
 import java.lang.Void as Should
 
+import static org.hamcrest.Matchers.equalTo
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -59,12 +61,29 @@ class ProductControllerSpec extends Specification {
         when:
             def result = this.mockMvc.perform(get("/products/" + product.getName()))
         then:
-            result.andExpect(status().isOk())
+            result.andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.price').value(product.getPrice()))
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(1)))
         and:
             1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
+    }
+
+    Should "return bad request for not existing product name"() {
+
+        given:
+            def productName = "notExisintProduct"
+        when:
+            def result = this.mockMvc.perform(get("/products/" + productName))
+        then:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
+                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
+        and:
+            1 * productService.findActualPriceForProduct(productName) >> {
+                throw new ProductNotFoundException(productName)
+            }
     }
 
 
