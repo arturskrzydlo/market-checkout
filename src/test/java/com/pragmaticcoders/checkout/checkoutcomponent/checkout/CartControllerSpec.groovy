@@ -26,20 +26,21 @@ class CartControllerSpec extends Specification {
     @Autowired
     private ObjectMapper mapper
 
+    @Autowired
     private CartService cartService
 
     Should "should add product to a cart and return it's price for existing product"() {
 
         given: "Product which exists in application"
             def product = createProduct()
-            def quantity = 3
-            def expectedResult = product.getPrice() * quantity
+            def scannedProduct = createScannedProduct()
+            def expectedResult = product.getPrice() * scannedProduct.getQuantity()
         when: "product is scanned"
             def result = mockMvc.perform(MockMvcRequestBuilders.post("/cart")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
-                    .content(mapper.writeValueAsString(product)))
+                    .content(mapper.writeValueAsString(scannedProduct)))
         then:
-            1 * cartService.addProductToCard(product.getName(), quantity) >> expectedResult
+            1 * cartService.addProductToCard(scannedProduct) >> expectedResult
         and:
             result.andExpect(status().isOk())
             result.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -60,18 +61,27 @@ class CartControllerSpec extends Specification {
 
     }
 
+    def createScannedProduct() {
+
+        ScannedProductDTO scannedProductDTO = new ScannedProductDTO()
+        scannedProductDTO.setProductName("toothbrush")
+        scannedProductDTO.setQuantity(3)
+
+        return scannedProductDTO
+    }
+
     @TestConfiguration
     static class MockConfig {
         def detachedMockFactory = new DetachedMockFactory()
 
         @Bean
-        public ObjectMapper getJacksonObjectMapper() {
+        ObjectMapper getJacksonObjectMapper() {
             MappingJackson2HttpMessageConverter jacksonMessageConverter = new MappingJackson2HttpMessageConverter();
             return jacksonMessageConverter.getObjectMapper()
         }
 
         @Bean
-        CartService carService() {
+        CartService cartService() {
             return detachedMockFactory.Mock(CartService)
         }
     }
