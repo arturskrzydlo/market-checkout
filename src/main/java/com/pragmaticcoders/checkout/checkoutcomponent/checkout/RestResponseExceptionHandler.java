@@ -11,6 +11,7 @@ import java.util.Collections;
 
 @ControllerAdvice class RestResponseExceptionHandler extends ResponseEntityExceptionHandler {
 
+    //TODO: this shouldnt be validation error
     @ExceptionHandler(ProductNotFoundException.class)
     protected ResponseEntity<Object> handleProductNotFoundException(ProductNotFoundException exc) {
 

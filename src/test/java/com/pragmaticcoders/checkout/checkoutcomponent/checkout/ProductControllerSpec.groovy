@@ -31,6 +31,9 @@ class ProductControllerSpec extends Specification {
     @Autowired
     private PromoService promoService
 
+    def promo1 = new Promo()
+    def promo2 = new Promo()
+
     Should "return json with all existing products"() {
 
         given: "preloaded products to application database"
@@ -71,7 +74,7 @@ class ProductControllerSpec extends Specification {
             1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
     }
 
-    Should "return HttpStatus.NOT_FOUND for not existing product name"() {
+    Should "return HttpStatus.NOT_FOUND for not existing product name on getting actual price of a product"() {
 
         given:
             def productName = "notExistingProduct"
@@ -87,6 +90,27 @@ class ProductControllerSpec extends Specification {
                     .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(productName)))
         and:
             1 * productService.findActualPriceForProduct(productName) >> {
+                throw new ProductNotFoundException(productName)
+            }
+    }
+
+    Should "return HttpStatus.NOT_FOUND for not existing product name on counting price with discounts for product"() {
+
+        given:
+            def productName = "notExistingProduct"
+            def quantity = 10
+        when:
+            def result = this.mockMvc.perform(get("/products/" + productName + "?quantity=" + quantity))
+        then:
+            result.andExpect(status().isNotFound())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
+                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
+                    .andExpect(jsonPath('$.message').isNotEmpty())
+                    .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
+                    .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(productName)))
+        and:
+            1 * productService.countProductPriceWithPromotions(productName, quantity) >> {
                 throw new ProductNotFoundException(productName)
             }
     }
@@ -112,6 +136,50 @@ class ProductControllerSpec extends Specification {
 
     }
 
+    //TODO: Maybe redundant test to previous one ?
+    Should "return price for existing product with applied discounts (product has many discounts)"() {
+
+        given: "product with two promotions"
+            def product = createProductWithPromos()
+        and: "product quantity"
+            def quantity = 16
+        and: "expected product price"
+            def expectedProductPrice = promo1.getSpecialPrice() + promo2.getSpecialPrice() + product.getPrice()
+        when:
+            def result = mockMvc.perform(MockMvcRequestBuilders.get("/products/" + product.getName() + "?quantity=" + quantity))
+        then:
+            1 * productService.countProductPriceWithPromotions(product.getName(), quantity) >> expectedProductPrice
+        and:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.price').value(expectedProductPrice))
+                    .andExpect(jsonPath('$.*').value(hasSize(1)))
+    }
+
+
+    def createProductWithPromos() {
+
+        Product product1 = new Product()
+        product1.setId(1)
+        product1.setName("toothbrush")
+        product1.setPrice(5.0)
+
+        promo1 = new Promo()
+        promo1.setId(1)
+        promo1.setUnitAmount(5)
+        promo1.setSpecialPrice(20)
+
+        promo2 = new Promo()
+        promo2.setId(2)
+        promo2.setUnitAmount(10)
+        promo2.setSpecialPrice(25)
+
+        product1.addPromo(promo1)
+        product1.addPromo(promo2)
+
+        return product1
+
+    }
 
     def createProductList() {
 
