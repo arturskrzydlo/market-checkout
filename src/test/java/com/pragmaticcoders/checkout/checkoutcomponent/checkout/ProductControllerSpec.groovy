@@ -61,11 +61,12 @@ class ProductControllerSpec extends Specification {
         then:
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.price').value(is(product.getPrice())))
+                    .andExpect(jsonPath('$.price').value(product.getPrice()))
                     .andExpect(jsonPath('$.*').value(Matchers.hasSize(1)))
         and:
             1 * productService.findActualPriceForProduct(product.getName()) >> product.getPrice()
     }
+
 
     def createProductList() {
 
