@@ -16,6 +16,7 @@ import java.lang.Void as Should
 
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.hasSize
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -97,6 +98,22 @@ class ReceiptControllerSpec extends Specification {
             }
     }
 
+    Should "create new receipt with id assigned to it when request to create receipt comes to the api"() {
+        given: "expected result in form of new receipt"
+            def freshlyCreatedReceipt = createFreshReceipt()
+        when: "proper call for creating new receipt resource incomes"
+            def result = mockMvc.perform(post("/receipt"))
+        then: "new receipt with assigned id in response"
+            result.andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.id').value(equalTo(freshlyCreatedReceipt.getId())))
+
+        and: "service create new receipt with id"
+            1 * receiptService.createNewReceipt() >> freshlyCreatedReceipt
+
+
+    }
+
 
     def createProduct() {
 
@@ -116,6 +133,14 @@ class ReceiptControllerSpec extends Specification {
         scannedProductDTO.setQuantity(3)
 
         return scannedProductDTO
+    }
+
+    def createFreshReceipt() {
+
+        Receipt receipt = new Receipt()
+        receipt.setId(1)
+        return receipt
+
     }
 
     @TestConfiguration
