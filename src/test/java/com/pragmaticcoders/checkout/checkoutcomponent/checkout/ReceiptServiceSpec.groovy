@@ -111,9 +111,6 @@ class ReceiptServiceSpec extends Specification {
             result.getId() == freshReceipt.getId()
     }
 
-    //todo
-    //should scan quantitty 1
-
 
     def createProduct() {
 

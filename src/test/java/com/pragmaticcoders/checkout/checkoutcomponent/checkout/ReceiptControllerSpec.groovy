@@ -17,8 +17,7 @@ import java.lang.Void as Should
 
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.hasSize
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @WebMvcTest(ReceiptController)
@@ -32,6 +31,7 @@ class ReceiptControllerSpec extends Specification {
 
     @Autowired
     private ReceiptService receiptService
+
 
     Should "should add product to a receipt and return it's price for existing product and existing receipt"() {
 
@@ -113,6 +113,25 @@ class ReceiptControllerSpec extends Specification {
             1 * receiptService.createNewReceipt() >> freshlyCreatedReceipt
     }
 
+    Should "return receipt with total price for shopping, when calling for receipt billing"() {
+        given: "existing receipt with receipt items"
+            def receipt = createReceiptWithReceiptItems()
+            def expectedPayment = calculateExpectedSimpleReceiptPayment(receipt)
+        when:
+            def result = mockMvc.perform(get("/receipt/" + receipt.getId()))
+        then:
+            1 * receiptService.produceReceiptWithPayment(receipt.getId()) >> expectedPayment
+        and:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.payment').value(equalTo(expectedPayment)))
+
+    }
+
+    Should "return receipt with detailed list of products with ther prices, when calling for receipt billing"() {
+
+    }
+
 
     def createProduct() {
 
@@ -138,6 +157,36 @@ class ReceiptControllerSpec extends Specification {
         Receipt receipt = new Receipt()
         receipt.setId(1)
         return receipt
+    }
+
+    def createReceiptWithReceiptItems() {
+
+        Receipt receipt = new Receipt()
+        receipt.setId(1)
+
+        ReceiptItem toothBrushItem = new ReceiptItem()
+        toothBrushItem.setQuantity(3)
+        toothBrushItem.setProduct(createProduct())
+        toothBrushItem.setId(1)
+
+        ReceiptItem vacuumCleanerItem = new ReceiptItem()
+        vacuumCleanerItem.setQuantity(1)
+
+        Product vacuumCleaner = createProduct()
+        vacuumCleaner.setPrice(200.0)
+        vacuumCleaner.setName("vacuumcleaner")
+
+        vacuumCleanerItem.setProduct(vacuumCleaner)
+
+        receipt.addItem(toothBrushItem)
+        receipt.addItem(vacuumCleanerItem)
+
+        return receipt
+    }
+
+    def calculateExpectedSimpleReceiptPayment(Receipt receipt) {
+        def mapProductPriceMultipliedByQuantity = { receiptItem -> receiptItem.quantity * receiptItem.product.price }
+        return receipt.getItems().stream().mapToInt(mapProductPriceMultipliedByQuantity).sum()
     }
 
     @TestConfiguration
