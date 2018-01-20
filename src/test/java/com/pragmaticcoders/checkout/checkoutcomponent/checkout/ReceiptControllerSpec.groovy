@@ -1,6 +1,7 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.modelmapper.ModelMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -106,12 +107,10 @@ class ReceiptControllerSpec extends Specification {
         then: "new receipt with assigned id in response"
             result.andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.id').value(equalTo(freshlyCreatedReceipt.getId())))
+                    .andExpect(jsonPath('$.receiptId').value(equalTo(freshlyCreatedReceipt.getId().toString())))
 
         and: "service create new receipt with id"
             1 * receiptService.createNewReceipt() >> freshlyCreatedReceipt
-
-
     }
 
 
@@ -123,7 +122,6 @@ class ReceiptControllerSpec extends Specification {
         product.setPrice(5.0)
 
         return product
-
     }
 
     def createScannedProduct() {
@@ -140,7 +138,6 @@ class ReceiptControllerSpec extends Specification {
         Receipt receipt = new Receipt()
         receipt.setId(1)
         return receipt
-
     }
 
     @TestConfiguration
@@ -156,6 +153,11 @@ class ReceiptControllerSpec extends Specification {
         @Bean
         ReceiptService cartService() {
             return detachedMockFactory.Mock(ReceiptService)
+        }
+
+        @Bean
+        ModelMapper getModelMapper() {
+            return new ModelMapper()
         }
     }
 

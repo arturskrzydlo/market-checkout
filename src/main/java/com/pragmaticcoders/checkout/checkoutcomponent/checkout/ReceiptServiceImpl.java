@@ -28,6 +28,13 @@ import java.util.Optional;
         return productFromRepo.getPrice() * product.getQuantity();
     }
 
+    @Override
+    public Receipt createNewReceipt() {
+
+        Receipt receipt = new Receipt();
+        return receiptRepository.save(receipt);
+    }
+
     private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)
             throws ReceiptNotFoundException {
 

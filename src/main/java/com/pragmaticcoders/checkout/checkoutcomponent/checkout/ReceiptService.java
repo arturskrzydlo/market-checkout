@@ -4,4 +4,6 @@ interface ReceiptService {
 
     Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
             throws ProductNotFoundException, ReceiptNotFoundException;
+
+    Receipt createNewReceipt();
 }
