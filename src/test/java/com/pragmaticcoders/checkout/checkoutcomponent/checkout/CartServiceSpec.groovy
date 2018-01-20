@@ -7,9 +7,9 @@ import java.lang.Void as Should
 class CartServiceSpec extends Specification {
 
     def productRepository = Mock(ProductRepository)
-    def cartService = new CartServiceImpl()
+    def cartService = new CartServiceImpl(productRepository)
 
-    Should "get product by it's name, add to cart and return it's price for existing product name"() {
+    Should "get product by it's name and return it's price for existing product name"() {
         given: "scanned product with name and quantity"
             def scannedProduct = createScannedProduct()
         and:
@@ -19,7 +19,27 @@ class CartServiceSpec extends Specification {
         then:
             1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
         and:
-            result == productFound.getPrice()
+            result == productFound.getPrice() * scannedProduct.quantity
+
+    }
+
+    Should "add cart to cart datatable when cart has been created yet"() {
+        given: "scanned product with name and quantity"
+            def scannedProduct = createScannedProduct()
+        and:
+            def productFound = createProduct()
+        and:
+            def cart = new Cart()
+        when: "add product has been called"
+            def result = cartService.addProductToCard(scannedProduct)
+        then:
+            1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
+        and:
+            1 * cartRepository.save(_) >> {
+                Cart cart1 ->
+                    assert cart1.getProducts().size() == 1
+
+            }
 
     }
 
