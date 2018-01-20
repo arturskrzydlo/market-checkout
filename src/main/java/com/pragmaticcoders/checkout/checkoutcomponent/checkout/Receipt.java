@@ -15,6 +15,8 @@ import java.util.Set;
     @OneToMany(mappedBy = "receipt")
     private Set<ReceiptItem> items = new HashSet<>();
 
+    private Double payment;
+
     public void addItem(ReceiptItem receiptItem) {
         receiptItem.setReceipt(this);
         items.add(receiptItem);

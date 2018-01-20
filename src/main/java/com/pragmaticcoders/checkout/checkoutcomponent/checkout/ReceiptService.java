@@ -6,4 +6,6 @@ interface ReceiptService {
             throws ProductNotFoundException, ReceiptNotFoundException;
 
     Receipt createNewReceipt();
+
+    Receipt produceReceiptWithPayment(Integer receiptId);
 }

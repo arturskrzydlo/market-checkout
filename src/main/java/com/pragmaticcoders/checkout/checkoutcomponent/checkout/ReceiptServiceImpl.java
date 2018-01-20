@@ -35,6 +35,10 @@ import java.util.Optional;
         return receiptRepository.save(receipt);
     }
 
+    @Override public Receipt produceReceiptWithPayment(Integer receiptId) {
+        return new Receipt();
+    }
+
     private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)
             throws ReceiptNotFoundException {
 

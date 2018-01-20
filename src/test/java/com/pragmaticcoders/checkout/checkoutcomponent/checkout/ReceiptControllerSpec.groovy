@@ -116,15 +116,15 @@ class ReceiptControllerSpec extends Specification {
     Should "return receipt with total price for shopping, when calling for receipt billing"() {
         given: "existing receipt with receipt items"
             def receipt = createReceiptWithReceiptItems()
-            def expectedPayment = calculateExpectedSimpleReceiptPayment(receipt)
+            def expectedReceiptWithPayment = calculateExpectedSimpleReceiptPayment(receipt)
         when:
             def result = mockMvc.perform(get("/receipt/" + receipt.getId()))
         then:
-            1 * receiptService.produceReceiptWithPayment(receipt.getId()) >> expectedPayment
+            1 * receiptService.produceReceiptWithPayment(receipt.getId()) >> expectedReceiptWithPayment
         and:
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.payment').value(equalTo(expectedPayment)))
+                    .andExpect(jsonPath('$.payment').value(equalTo(expectedReceiptWithPayment.payment)))
 
     }
 
@@ -185,8 +185,12 @@ class ReceiptControllerSpec extends Specification {
     }
 
     def calculateExpectedSimpleReceiptPayment(Receipt receipt) {
-        def mapProductPriceMultipliedByQuantity = { receiptItem -> receiptItem.quantity * receiptItem.product.price }
-        return receipt.getItems().stream().mapToInt(mapProductPriceMultipliedByQuantity).sum()
+        def sum = 0
+        for (ReceiptItem item : receipt.items) {
+            sum = sum + item.quantity * item.product.price
+        }
+        receipt.setPayment(sum)
+        return receipt
     }
 
     @TestConfiguration

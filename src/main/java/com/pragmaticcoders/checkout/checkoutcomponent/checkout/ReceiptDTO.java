@@ -12,5 +12,5 @@ import lombok.*;
 public class ReceiptDTO {
 
     private String receiptId;
-
+    private Double payment;
 }

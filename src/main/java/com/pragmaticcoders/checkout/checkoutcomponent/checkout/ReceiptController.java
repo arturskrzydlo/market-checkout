@@ -16,6 +16,7 @@ import java.util.Map;
     @Autowired
     private ModelMapper modelMapper;
 
+    //TODO maybe update whole receipt - > change scannedProductDTO to ReceiptDTO
     @PutMapping("/{receiptId}")
     public Map<String, Double> scanProduct(@RequestBody ScannedProductDTO scannedProductDTO,
             @PathVariable Integer receiptId) throws ProductNotFoundException, ReceiptNotFoundException {
@@ -26,6 +27,12 @@ import java.util.Map;
     @ResponseStatus(HttpStatus.CREATED)
     public ReceiptDTO createReceipt() {
         return convertToDTO(receiptService.createNewReceipt());
+    }
+
+    @GetMapping("/{receiptId}")
+    public ReceiptDTO getReceiptWithPayment(@PathVariable Integer receiptId) {
+
+        return convertToDTO(receiptService.produceReceiptWithPayment(receiptId));
     }
 
     @Autowired
