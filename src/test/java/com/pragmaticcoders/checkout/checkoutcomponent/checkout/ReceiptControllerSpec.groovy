@@ -29,18 +29,19 @@ class ReceiptControllerSpec extends Specification {
     @Autowired
     private ReceiptService cartService
 
-    Should "should add product to a cart and return it's price for existing product"() {
+    Should "should add product to a receipt and return it's price for existing product and existing receipt"() {
 
         given: "Product which exists in application"
             def product = createProduct()
             def scannedProduct = createScannedProduct()
             def expectedResult = product.getPrice() * scannedProduct.getQuantity()
+            def existintReceiptId = 1
         when: "product is scanned"
             def result = mockMvc.perform(MockMvcRequestBuilders.post("/cart")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
-            1 * cartService.addProductToReceipt(scannedProduct) >> expectedResult
+            1 * cartService.addProductToReceipt(scannedProduct, existintReceiptId) >> expectedResult
         and:
             result.andExpect(status().isOk())
             result.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
