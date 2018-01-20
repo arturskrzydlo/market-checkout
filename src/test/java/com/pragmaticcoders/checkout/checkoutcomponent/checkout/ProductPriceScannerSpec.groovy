@@ -55,7 +55,7 @@ class ProductPriceScannerSpec extends Specification {
             producteService.findActualPriceForProduct(nonExistingProductName)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message == "Product with name " + nonExistingProductName + " does not exists"
+            exception.message == "Product with identity " + nonExistingProductName + " does not exists"
 
     }
 
@@ -117,7 +117,7 @@ class ProductPriceScannerSpec extends Specification {
             producteService.countProductPriceWithPromotions(nonExistingProductName, 1)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message == "Product with name " + nonExistingProductName + " does not exists"
+            exception.message == "Product with identity " + nonExistingProductName + " does not exists"
     }
 
 

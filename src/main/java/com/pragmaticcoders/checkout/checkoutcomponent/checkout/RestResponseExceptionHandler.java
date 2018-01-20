@@ -12,11 +12,11 @@ import java.util.Collections;
 @ControllerAdvice class RestResponseExceptionHandler extends ResponseEntityExceptionHandler {
 
     //TODO: this shouldnt be validation error
-    @ExceptionHandler(ProductNotFoundException.class)
-    protected ResponseEntity<Object> handleProductNotFoundException(ProductNotFoundException exc) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    protected ResponseEntity<Object> handleProductNotFoundException(ResourceNotFoundException exc) {
 
         ApiValidationError apiValidationError = new ApiValidationError("NAME", exc.getMessage());
-        apiValidationError.setRejectedValue(exc.getProductName());
+        apiValidationError.setRejectedValue(exc.getIdentity());
 
         ApiError apiError = new ApiError(HttpStatus.NOT_FOUND);
         apiError.setMessage("Validation errors");

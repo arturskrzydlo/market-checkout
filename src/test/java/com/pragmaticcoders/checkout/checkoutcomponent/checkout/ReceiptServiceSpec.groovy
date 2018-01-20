@@ -80,7 +80,7 @@ class ReceiptServiceSpec extends Specification {
             receiptService.addProductToReceipt(scannedProduct, 1)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message == "Product with name " + nonExistingProduct.getName() + " does not exists"
+            exception.message == "Product with identity " + nonExistingProduct.getName() + " does not exists"
     }
 
     Should "throw ReceiptNotFoundException if product name doesn't exists"() {

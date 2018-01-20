@@ -1,18 +1,11 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
-import java.text.MessageFormat;
+class ProductNotFoundException extends ResourceNotFoundException {
 
-class ProductNotFoundException extends Exception {
-
-    private static final String MESSAGE = "Product with name {0} does not exists";
-    String productName;
+    private static final String RESOURCE_NAME = "Product";
 
     public ProductNotFoundException(String productName) {
-        super(MessageFormat.format(MESSAGE, productName));
-        this.productName = productName;
+        super(productName, RESOURCE_NAME);
     }
 
-    public String getProductName() {
-        return productName;
-    }
 }

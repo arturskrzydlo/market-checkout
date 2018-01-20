@@ -51,7 +51,7 @@ class PromoServiceSpec extends Specification {
             promoService.createMultiPricedPromo(productName, unitsAmount, specialPrice)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message == "Product with name " + productName + " does not exists"
+            exception.message == "Product with identity " + productName + " does not exists"
         and:
             0 * promoRepository.save(_)
     }
@@ -67,7 +67,7 @@ class PromoServiceSpec extends Specification {
             !allResults.isEmpty()
             allResults.size() == manyPromosForSampleProduct.size()
             1 * productRepository.findByName(productName) >> sampleProductToCheck
-            1 * promoRepository.findByProductName(productName) >> manyPromosForSampleProduct
+            1 * promoRepository.findByProducts_Name(productName) >> manyPromosForSampleProduct
     }
 
     Should "throw ProductNotFoundException when product name doesn't exists when getting all promotions"() {
@@ -79,7 +79,7 @@ class PromoServiceSpec extends Specification {
             promoService.getAllPromotionsForProduct(productName)
         then:
             ProductNotFoundException exception = thrown()
-            exception.message == "Product with name " + productName + " does not exists"
+            exception.message == "Product with identity " + productName + " does not exists"
     }
 
 
