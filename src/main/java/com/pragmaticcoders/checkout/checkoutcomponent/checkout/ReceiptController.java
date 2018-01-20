@@ -13,7 +13,7 @@ import java.util.Map;
 
     @PutMapping("/{receiptId}")
     public Map<String, Double> scanProduct(@RequestBody ScannedProductDTO scannedProductDTO,
-            @PathVariable Integer receiptId) {
+            @PathVariable Integer receiptId) throws ProductNotFoundException, ReceiptNotFoundException {
         return Collections.singletonMap("price", receiptService.addProductToReceipt(scannedProductDTO, receiptId));
     }
 

@@ -19,17 +19,19 @@ import java.util.Optional;
 
     @Override
     @Transactional
-    public Double addProductToReceipt(ScannedProductDTO product, Integer receiptId) {
-        Product productFromRepo = productRepository.findByName(product.getProductName());
+    public Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
+            throws ProductNotFoundException, ReceiptNotFoundException {
+        Product productFromRepo = getProductByProductName(product.getProductName());
 
         Receipt receipt = updateReceipt(productFromRepo, receiptId, product.getQuantity());
         receiptRepository.save(receipt);
         return productFromRepo.getPrice() * product.getQuantity();
     }
 
-    private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity) {
+    private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)
+            throws ReceiptNotFoundException {
 
-        Receipt receipt = receiptRepository.findOne(receiptId);
+        Receipt receipt = getReceiptById(receiptId);
         Optional<ReceiptItem> receiptItemForProduct = receipt.getItems().stream()
                 .filter(receiptItem -> receiptItem.getProduct().equals(product) && receiptItem.getReceipt()
                         .equals(receipt))
@@ -53,5 +55,25 @@ import java.util.Optional;
         receiptItem.setQuantity(quantity);
 
         return receiptItem;
+    }
+
+    private Receipt getReceiptById(Integer receiptId) throws ReceiptNotFoundException {
+        Receipt receipt = receiptRepository.findOne(receiptId);
+        if (receipt == null) {
+            throw new ReceiptNotFoundException(receiptId);
+        }
+
+        return receipt;
+    }
+
+    //TODO: move it to product service - it's redundant with promo service impl
+    private Product getProductByProductName(String productName) throws ProductNotFoundException {
+
+        Product product = productRepository.findByName(productName);
+        if (product == null) {
+            throw new ProductNotFoundException(productName);
+        }
+
+        return product;
     }
 }

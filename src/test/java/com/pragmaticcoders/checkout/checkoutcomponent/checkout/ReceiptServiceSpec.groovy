@@ -88,13 +88,16 @@ class ReceiptServiceSpec extends Specification {
             def scannedProduct = createScannedProduct()
         and:
             def nonExistingReceipt = createExistingReceiptWithoutReceiptItems()
+            def productFound = createProduct()
+        and:
+            productRepository.findByName(scannedProduct.getProductName()) >> productFound
         and:
             receiptRepository.findOne(nonExistingReceipt.getId()) >> null
         when:
             receiptService.addProductToReceipt(scannedProduct, nonExistingReceipt.getId())
         then:
             ReceiptNotFoundException exception = thrown()
-            exception.message == "Receipt with id " + nonExistingReceipt.getId() + " does not exists"
+            exception.message == "Receipt with identity " + nonExistingReceipt.getId() + " does not exists"
     }
 
     //todo
