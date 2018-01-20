@@ -24,21 +24,19 @@ class ReceiptServiceSpec extends Specification {
 
     }
 
-    Should "add cart to cart datatable when cart has been created yet"() {
+    Should "add receipt to receipt datatable when cart has not been created yet"() {
         given: "scanned product with name and quantity"
             def scannedProduct = createScannedProduct()
         and:
             def productFound = createProduct()
-        and:
-            def receipt = new Receipt()
         when: "add product has been called"
-            def result = cartService.addProductToReceipt(scannedProduct)
+            cartService.addProductToReceipt(scannedProduct)
         then:
             1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
         and:
             1 * receiptRepository.save(_) >> {
                 Receipt receipt1 ->
-                    assert receipt1.getReceiptItems().size() == 1
+                    assert receipt1.getItems().size() == 1
 
             }
 
