@@ -6,8 +6,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Optional;
 
-@Service
-public class ReceiptServiceImpl implements ReceiptService {
+@Service class ReceiptServiceImpl implements ReceiptService {
 
     private ProductRepository productRepository;
     private ReceiptRepository receiptRepository;

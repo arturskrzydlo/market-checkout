@@ -10,8 +10,7 @@ import java.util.Set;
 
 @Entity
 @Getter
-@Setter
-public class Receipt extends AbstractDomainClass {
+@Setter class Receipt extends AbstractDomainClass {
 
     @OneToMany(mappedBy = "receipt")
     private Set<ReceiptItem> items = new HashSet<>();

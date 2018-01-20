@@ -8,8 +8,7 @@ import javax.persistence.ManyToOne;
 
 @Entity
 @Getter
-@Setter
-public class ReceiptItem extends AbstractDomainClass {
+@Setter class ReceiptItem extends AbstractDomainClass {
 
     @ManyToOne
     private Product product;
