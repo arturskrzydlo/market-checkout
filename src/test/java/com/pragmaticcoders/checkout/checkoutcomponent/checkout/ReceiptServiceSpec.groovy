@@ -100,6 +100,17 @@ class ReceiptServiceSpec extends Specification {
             exception.message == "Receipt with identity " + nonExistingReceipt.getId() + " does not exists"
     }
 
+    Should "create new entity with id assigned to it"() {
+        given: "expected result"
+            def freshReceipt = createExistingReceiptWithoutReceiptItems()
+        when:
+            def result = receiptService.createNewReceipt()
+        then:
+            1 * receiptRepository.save(_) >> freshReceipt
+        and:
+            result.getId() == freshReceipt.getId()
+    }
+
     //todo
     //should scan quantitty 1
 
