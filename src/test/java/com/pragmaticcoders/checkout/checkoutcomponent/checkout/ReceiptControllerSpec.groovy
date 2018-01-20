@@ -17,8 +17,8 @@ import java.lang.Void as Should
 import static org.hamcrest.Matchers.hasSize
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-@WebMvcTest(CartController)
-class CartControllerSpec extends Specification {
+@WebMvcTest(ReceiptController)
+class ReceiptControllerSpec extends Specification {
 
     @Autowired
     private MockMvc mockMvc
@@ -27,7 +27,7 @@ class CartControllerSpec extends Specification {
     private ObjectMapper mapper
 
     @Autowired
-    private CartService cartService
+    private ReceiptService cartService
 
     Should "should add product to a cart and return it's price for existing product"() {
 
@@ -40,7 +40,7 @@ class CartControllerSpec extends Specification {
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
-            1 * cartService.addProductToCard(scannedProduct) >> expectedResult
+            1 * cartService.addProductToReceipt(scannedProduct) >> expectedResult
         and:
             result.andExpect(status().isOk())
             result.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -81,8 +81,8 @@ class CartControllerSpec extends Specification {
         }
 
         @Bean
-        CartService cartService() {
-            return detachedMockFactory.Mock(CartService)
+        ReceiptService cartService() {
+            return detachedMockFactory.Mock(ReceiptService)
         }
     }
 

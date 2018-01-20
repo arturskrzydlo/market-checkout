@@ -4,10 +4,11 @@ import spock.lang.Specification
 
 import java.lang.Void as Should
 
-class CartServiceSpec extends Specification {
+class ReceiptServiceSpec extends Specification {
 
     def productRepository = Mock(ProductRepository)
-    def cartService = new CartServiceImpl(productRepository)
+    def receiptRepository = Mock(ReceiptRepository)
+    def cartService = new ReceiptServiceImpl(productRepository)
 
     Should "get product by it's name and return it's price for existing product name"() {
         given: "scanned product with name and quantity"
@@ -15,7 +16,7 @@ class CartServiceSpec extends Specification {
         and:
             def productFound = createProduct()
         when: "add product has been called"
-            def result = cartService.addProductToCard(scannedProduct)
+            def result = cartService.addProductToReceipt(scannedProduct)
         then:
             1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
         and:
@@ -29,15 +30,15 @@ class CartServiceSpec extends Specification {
         and:
             def productFound = createProduct()
         and:
-            def cart = new Cart()
+            def receipt = new Receipt()
         when: "add product has been called"
-            def result = cartService.addProductToCard(scannedProduct)
+            def result = cartService.addProductToReceipt(scannedProduct)
         then:
             1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
         and:
-            1 * cartRepository.save(_) >> {
-                Cart cart1 ->
-                    assert cart1.getProducts().size() == 1
+            1 * receiptRepository.save(_) >> {
+                Receipt receipt1 ->
+                    assert receipt1.getReceiptItems().size() == 1
 
             }
 
