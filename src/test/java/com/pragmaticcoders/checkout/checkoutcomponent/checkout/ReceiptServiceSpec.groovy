@@ -111,6 +111,19 @@ class ReceiptServiceSpec extends Specification {
             result.getId() == freshReceipt.getId()
     }
 
+    Should "return receipt with total price for receipt's items when no promos for products"() {
+        given: "mock receipt which will be returned from repository"
+            def receiptWithItems = createReceiptWithReceiptItems()
+        when: "calling method to produce receipt (calculate payment)"
+            def result = receiptService.produceReceiptWithPayment(receiptWithItems.id)
+        then:
+            1 * receiptRepository.findOne(receiptWithItems.id) >> receiptWithItems
+        and:
+            result == calculateExpectedSimpleReceiptPayment(receiptWithItems)
+
+
+    }
+
 
     def createProduct() {
 
@@ -121,6 +134,15 @@ class ReceiptServiceSpec extends Specification {
 
         return product
 
+    }
+
+    def calculateExpectedSimpleReceiptPayment(Receipt receipt) {
+        def sum = 0
+        for (ReceiptItem item : receipt.items) {
+            sum = sum + item.quantity * item.product.price
+        }
+        receipt.setPayment(sum)
+        return receipt
     }
 
     def createReceiptWithReceiptItems() {
