@@ -10,11 +10,14 @@ import java.util.Optional;
 
     private ProductRepository productRepository;
     private ReceiptRepository receiptRepository;
+    private ProductService productService;
 
     @Autowired
-    public ReceiptServiceImpl(ProductRepository productRepository, ReceiptRepository receiptRepository) {
+    public ReceiptServiceImpl(ProductRepository productRepository, ReceiptRepository receiptRepository,
+            ProductService productService) {
         this.productRepository = productRepository;
         this.receiptRepository = receiptRepository;
+        this.productService = productService;
     }
 
     @Override
@@ -45,10 +48,11 @@ import java.util.Optional;
 
     private void calculatePayment(Receipt receipt) {
 
-        double payment = receipt.getItems().stream()
-                .mapToDouble(item -> item.getQuantity() * item.getProduct().getPrice())
-                .sum();
-
+        double payment = 0.0;
+        for (ReceiptItem receiptItem : receipt.getItems()) {
+            payment = +productService
+                    .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity());
+        }
         receipt.setPayment(payment);
     }
 
@@ -99,5 +103,10 @@ import java.util.Optional;
         }
 
         return product;
+    }
+
+    private double applyAsDouble(ReceiptItem item) throws ProductNotFoundException {
+        return productService
+                .countProductPriceWithPromotions(item.getProduct().getName(), item.getQuantity());
     }
 }

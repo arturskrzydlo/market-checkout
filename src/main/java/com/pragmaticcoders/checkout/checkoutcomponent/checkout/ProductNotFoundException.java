@@ -8,4 +8,7 @@ class ProductNotFoundException extends ResourceNotFoundException {
         super(productName, RESOURCE_NAME);
     }
 
+    public ProductNotFoundException() {
+        super("NO_NAME", RESOURCE_NAME);
+    }
 }

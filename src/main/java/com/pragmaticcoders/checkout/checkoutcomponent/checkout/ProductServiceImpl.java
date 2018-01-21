@@ -31,9 +31,16 @@ import java.util.stream.StreamSupport;
         }
 
         Optional<Product> product = Optional.ofNullable(productRepository.findByName(productName));
-        return product
-                .map(prod -> applyPromotionsOnProductPrice(prod, quantity))
-                .orElseThrow(() -> new ProductNotFoundException(productName));
+        return countProductPriceWithPromotions(product.orElseThrow(() -> new ProductNotFoundException(productName)),
+                quantity);
+    }
+
+    @Override
+    public Double countProductPriceWithPromotions(Product product, int quantity) {
+        if (quantity < 1 || product == null) {
+            return 0.0;
+        }
+        return applyPromotionsOnProductPrice(product, quantity);
     }
 
     @Override public List<Product> getAllProducts() {

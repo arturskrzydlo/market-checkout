@@ -8,7 +8,8 @@ class ReceiptServiceSpec extends Specification {
 
     def productRepository = Mock(ProductRepository)
     def receiptRepository = Mock(ReceiptRepository)
-    def receiptService = new ReceiptServiceImpl(productRepository, receiptRepository)
+    def productService = Mock(ProductService)
+    def receiptService = new ReceiptServiceImpl(productRepository, receiptRepository, productService)
 
     Should "get product by it's name and return it's price for existing product name and existing receipt"() {
         given: "scanned product with name and quantity"
@@ -135,13 +136,13 @@ class ReceiptServiceSpec extends Specification {
     Should "return receipt with total price for receipt's items when multipriced promo for at least one product is available"() {
         given: "mock receipt which will be returned from repository"
             def receiptWithItemsWithPromos = createReceiptWithReceiptItemsWithPromos()
-        when:
         when: "calling method to produce receipt (calculate payment)"
             def result = receiptService.produceReceiptWithPayment(receiptWithItemsWithPromos.id)
         then:
             1 * receiptRepository.findOne(receiptWithItemsWithPromos.id) >> receiptWithItemsWithPromos
+            receiptWithItemsWithPromos.getItems().size() * productService.countProductPriceWithPromotions(_, _) >> 10
         and:
-            result.getPayment() != calculateExpectedSimpleReceiptPayment(receiptWithItemsWithPromos).getPayment()
+            result.getPayment() == 10
 
     }
 

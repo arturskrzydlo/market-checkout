@@ -8,5 +8,7 @@ interface ProductService {
 
     Double countProductPriceWithPromotions(String productName, int quantity) throws ProductNotFoundException;
 
+    Double countProductPriceWithPromotions(Product product, int quantity);
+
     List<Product> getAllProducts();
 }
