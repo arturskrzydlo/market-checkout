@@ -69,7 +69,8 @@ import java.util.stream.Collectors;
 
     private Double applyPromotionsOnProductPrice(ReceiptItem receiptItem, Set<ReceiptItem> allItems) {
 
-        double bestCombinedPromoPrice = getMostBeneficialPromoPrice(receiptItem.getProduct(), receiptItem.getQuantity(),
+        double bestCombinedPromoPrice = getMostBeneficialCombinePromoPrice(receiptItem.getProduct(),
+                receiptItem.getQuantity(),
                 allItems);
         List<Promo> promotions = chooseMostBeneficialMultiPricedPromotion(receiptItem.getProduct(),
                 receiptItem.getQuantity());
@@ -93,31 +94,75 @@ import java.util.stream.Collectors;
         return promotionsPrice + (quantity - promoQuantity) * product.getPrice();
     }
 
-    private static double getMostBeneficialPromoPrice(Product product, int quantity,
+    private Set<Product> getProductsWithWhichCalculatedProductCombinesWithInPromotion(Product product) {
+        return product.getPromos().stream()
+                .filter(promo -> promo.getType().equals(PromoType.COMBINED))
+                .map(promo -> promo.getProducts().stream()
+                        .filter(product1 -> !product1.equals(product)).collect(Collectors.toList()))
+                .flatMap(productsList -> productsList.stream())
+                .collect(Collectors.toSet());
+    }
+
+    private Optional<Promo> findPromotionForProduct(Set<Promo> promos, Product product) {
+        return promos.stream().filter(promo -> promo.getProducts().contains(product)).findFirst();
+    }
+
+    private Optional<ReceiptItem> findReceiptForProduct(Set<ReceiptItem> receiptItems, Product product) {
+        return receiptItems.stream()
+                .filter(receiptItem -> receiptItem.getProduct().equals(product))
+                .findAny();
+    }
+
+    private double getMostBeneficialCombinePromoPrice(Product product, int quantity,
             Set<ReceiptItem> receiptItems) {
 
-        Set<Promo> combinedPromos = product.getPromos().stream()
-                .filter(promo -> promo.getType().equals(PromoType.COMBINED))
-                .collect(Collectors.toSet());
+        Set<Product> products = getProductsWithWhichCalculatedProductCombinesWithInPromotion(product);
 
         double minPrice = Integer.MAX_VALUE;
 
-        for (ReceiptItem receiptItem : receiptItems) {
+        for (Product productToCombineWith : products) {
 
-            Optional<Promo> optionalPromo = combinedPromos.stream()
-                    .filter(promo -> promo.getProducts().contains(receiptItem.getProduct()))
-                    .findFirst();
+            Optional<ReceiptItem> receiptForProduct = findReceiptForProduct(receiptItems, productToCombineWith);
+            if (receiptForProduct.isPresent()) {
 
-            if (optionalPromo.isPresent()) {
-                double promoPrice =
-                        Math.min(quantity, receiptItem.getQuantity()) * optionalPromo.get().getSpecialPrice();
-                if (promoPrice < minPrice) {
-                    minPrice = promoPrice;
+                Optional<Promo> optionalPromo = findPromotionForProduct(product.getPromos(), productToCombineWith);
+                if (optionalPromo.isPresent()) {
+
+                    Promo promo = optionalPromo.get();
+                    //reduce price only of more expensive product
+                    Optional<Product> productWithHigherPrice = promo
+                            .getProducts()
+                            .stream()
+                            .max(Comparator.comparing(product1 -> product1.getPrice()));
+
+                    Optional<Product> productWithLowePrice = promo
+                            .getProducts()
+                            .stream()
+                            .min(Comparator.comparing(product1 -> product1.getPrice()));
+
+                    if (product.equals(productWithHigherPrice.orElse(product))) {
+
+                        int minQuantity = Math.min(quantity, receiptForProduct.get().getQuantity());
+                        // is special price minus price of lower price product. Promotion is applied only on one product, so
+                        // special price must be substracted by lower price products
+                        double lowerPrice = 0.0;
+                        if (productWithLowePrice.isPresent()) {
+                            lowerPrice = productWithLowePrice.get().getPrice();
+                        }
+                        double specialPrice = promo.getSpecialPrice() - lowerPrice;
+                        // promo price consist of units on which promotion applies (for instance 2 units of product)
+                        // multiplied by special price and then the rest of the product units cos normal price
+                        double promoPrice = minQuantity * specialPrice + (quantity - minQuantity) * product.getPrice();
+                        if (promoPrice < minPrice) {
+                            minPrice = promoPrice;
+                        }
+                    }
                 }
             }
+
         }
 
-        return minPrice;
+        return minPrice == Integer.MAX_VALUE ? product.getPrice() : minPrice;
     }
 
     private static List<Promo> chooseMostBeneficialMultiPricedPromotion(Product product,
