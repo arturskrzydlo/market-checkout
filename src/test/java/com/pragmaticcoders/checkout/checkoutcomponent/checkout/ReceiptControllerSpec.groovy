@@ -129,6 +129,25 @@ class ReceiptControllerSpec extends Specification {
 
     }
 
+    Should "return HttpStatus.NOT_FOUND for not existing receipt name when calling for receipt billing"() {
+        given: "not existing receipt"
+            def notExistingReceipt = createFreshReceipt()
+        when:
+            def result = mockMvc.perform(get("/receipt/" + notExistingReceipt.getId()))
+        then:
+            1 * receiptService.produceReceiptWithPayment(notExistingReceipt.getId()) >> {
+                throw new ReceiptNotFoundException(notExistingReceipt.id)
+            }
+        and:
+            result.andExpect(status().isNotFound())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
+                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
+                    .andExpect(jsonPath('$.message').isNotEmpty())
+                    .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
+                    .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(notExistingReceipt.id.toString())))
+    }
+
 
 
 
