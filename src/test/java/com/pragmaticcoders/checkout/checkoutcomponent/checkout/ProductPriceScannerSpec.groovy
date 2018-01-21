@@ -130,6 +130,20 @@ class ProductPriceScannerSpec extends Specification {
             exception.message == "Product with identity " + nonExistingProductName + " does not exists"
     }
 
+    Should "return combined promotion when no other promotion exists"() {
+
+        given: "one combined promo for a sample product"
+            def combinedPromo = creaetCombinedPromoForSampleProduct()
+        and:
+            def listOfOtherProducts = [combinedPromo.getProducts()[1]]
+        when:
+            def result = producteService.countProductPriceWithPromotions(combinedPromo.getProducts()[0], 2, listOfOtherProducts)
+        then:
+            result == combinedPromo.getSpecialPrice()
+
+
+    }
+
 
     def createManyPromosForSampleProduct() {
 
@@ -152,6 +166,23 @@ class ProductPriceScannerSpec extends Specification {
         List<Promo> promos = [promo1, promo2, promo3]
         return promos
 
+    }
+
+    def creaetCombinedPromoForSampleProduct() {
+
+        Product product1 = createSampleProduct()
+        Promo combinedPromo = new Promo()
+        combinedProm.setType(PromoType.COMBINED)
+        combinedPromo.addProduct(product1)
+
+        Product product2 = new Product()
+        product2.setPrice(20.0)
+        product2.setName("headphones")
+
+        combinedPromo.addProduct(product2)
+        combinedPromo.setSpecialPrice(product2.getPrice() + product1.getPrice() - 10.0)
+
+        return combinedPromo
     }
 
     def createSampleProduct() {
