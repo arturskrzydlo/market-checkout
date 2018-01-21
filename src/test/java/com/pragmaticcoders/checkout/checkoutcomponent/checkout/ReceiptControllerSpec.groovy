@@ -164,6 +164,7 @@ class ReceiptControllerSpec extends Specification {
                     .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(notExistingReceipt.id.toString())))
     }
 
+
     def createProduct() {
 
         Product product = new Product()

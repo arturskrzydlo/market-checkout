@@ -1,7 +1,10 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,13 +25,6 @@ import java.util.Map;
         return Collections.singletonMap("price", productService.findActualPriceForProduct(productName));
     }
 
-    @GetMapping(value = "/{productName}", params = {"quantity"})
-    public Map<String, Double> getProductPriceWithDiscounts(@PathVariable String productName,
-            @RequestParam(defaultValue = "1") Integer quantity)
-            throws ProductNotFoundException {
-
-        return Collections.singletonMap("price", productService.countProductPriceWithPromotions(productName, quantity));
-    }
 
     @Autowired
     public void setProductService(ProductService productService) {

@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
@@ -93,69 +92,6 @@ class ProductControllerSpec extends Specification {
                 throw new ProductNotFoundException(productName)
             }
     }
-
-    Should "return HttpStatus.NOT_FOUND for not existing product name on counting price with discounts for product"() {
-
-        given:
-            def productName = "notExistingProduct"
-            def quantity = 10
-        when:
-            def result = this.mockMvc.perform(get("/products/" + productName + "?quantity=" + quantity))
-        then:
-            result.andExpect(status().isNotFound())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
-                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
-                    .andExpect(jsonPath('$.message').isNotEmpty())
-                    .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
-                    .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(productName)))
-        and:
-            1 * productService.countProductPriceWithPromotions(productName, quantity) >> {
-                throw new ProductNotFoundException(productName)
-            }
-    }
-
-    Should "return price for given existing product name which has no promos assigned to"() {
-
-        given: "product with no promotions"
-            def product = createProductList()[0]
-        and: "product quantity"
-            def quantity = 10
-        and: "expected product price"
-            def expectedProductPrice = product.getPrice() * quantity
-        when:
-            def result = mockMvc.perform(MockMvcRequestBuilders.get("/products/" + product.getName() + "?quantity=" + quantity))
-
-        then:
-            result.andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.price').value(expectedProductPrice))
-                    .andExpect(jsonPath('$.*').value(hasSize(1)))
-        and:
-            1 * productService.countProductPriceWithPromotions(product.getName(), quantity) >> expectedProductPrice
-
-    }
-
-    //TODO: Maybe redundant test to previous one ?
-    Should "return price for existing product with applied discounts (product has many discounts)"() {
-
-        given: "product with two promotions"
-            def product = createProductWithPromos()
-        and: "product quantity"
-            def quantity = 16
-        and: "expected product price"
-            def expectedProductPrice = promo1.getSpecialPrice() + promo2.getSpecialPrice() + product.getPrice()
-        when:
-            def result = mockMvc.perform(MockMvcRequestBuilders.get("/products/" + product.getName() + "?quantity=" + quantity))
-        then:
-            1 * productService.countProductPriceWithPromotions(product.getName(), quantity) >> expectedProductPrice
-        and:
-            result.andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                    .andExpect(jsonPath('$.price').value(expectedProductPrice))
-                    .andExpect(jsonPath('$.*').value(hasSize(1)))
-    }
-
 
     def createProductWithPromos() {
 

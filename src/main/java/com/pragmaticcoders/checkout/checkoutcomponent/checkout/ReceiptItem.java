@@ -16,5 +16,6 @@ import javax.persistence.ManyToOne;
     @ManyToOne
     private Receipt receipt;
     private int quantity;
+    private double price;
 
 }

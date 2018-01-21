@@ -2,7 +2,6 @@ package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.lang.Void as Should
 
@@ -59,90 +58,7 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
-    @Unroll
-    Should "get real product price after promotions application for #quantity unit of product"() {
-        given: "product name"
-            def productName = sampleProductToCheck.getName()
-        and: "product with 3 multipriced promos"
-            sampleProductToCheck.addPromo(promo1)
-            sampleProductToCheck.addPromo(promo2)
-            sampleProductToCheck.addPromo(promo3)
-        when:
-            def result = producteService.countProductPriceWithPromotions(productName, quantity)
-        then:
-            1 * productRepository.findByName(productName) >> sampleProductToCheck
-            result == finalPrice
-        where:
-            quantity | finalPrice
-            1        | productPrice
-            5        | promo3.getSpecialPrice()
-            7        | promo3.getSpecialPrice() + 2 * productPrice
-            10       | promo1.getSpecialPrice()
-            11       | promo1.getSpecialPrice() + productPrice
-            15       | promo1.getSpecialPrice() + promo3.getSpecialPrice()
-            20       | promo2.getSpecialPrice()
-            30       | promo2.getSpecialPrice() + promo1.getSpecialPrice()
-            100      | 5 * promo2.getSpecialPrice()
-            115      | 5 * promo2.getSpecialPrice() + promo1.getSpecialPrice() + promo3.getSpecialPrice()
 
-    }
-
-    Should "return 0 when calling to calculate product price with null product"() {
-        given: "null product"
-            Product product = null
-        when:
-            def result = producteService.countProductPriceWithPromotions(product as Product, 1)
-        then:
-            result == 0.0
-    }
-
-
-    Should "return 0 price, when quantity is less then 1"() {
-        given: "product name"
-            def productName = sampleProductToCheck.getName()
-        and: "product with 3 multipriced promos"
-            sampleProductToCheck.addPromo(promo1)
-            sampleProductToCheck.addPromo(promo2)
-            sampleProductToCheck.addPromo(promo3)
-        when:
-            def result = producteService.countProductPriceWithPromotions(productName, quantity)
-        then:
-            0 * productRepository.findByName(productName) >> sampleProductToCheck
-            result == finalPrice
-        where:
-            quantity | finalPrice
-            -1       | 0
-            0        | 0
-    }
-
-    Should "throw ProductNotFoundException when product name does not exists"() {
-
-        given: "name of not existing product"
-            def nonExistingProductName = "nonExistingProductName"
-
-        and: "repository can't find such a product and return null instead"
-            productRepository.findByName(nonExistingProductName) >> null
-
-        when: "trying to find actual price for product"
-            producteService.countProductPriceWithPromotions(nonExistingProductName, 1)
-        then:
-            ProductNotFoundException exception = thrown()
-            exception.message == "Product with identity " + nonExistingProductName + " does not exists"
-    }
-
-    Should "return combined promotion for single unit products when no other promotion exists"() {
-
-        given: "one combined promo for a sample product"
-            def combinedPromo = creaetCombinedPromoForSampleProduct()
-        and: "add two receipt items to a receipt"
-            def setOfOtherProducts = addTwoReceiptItemsToReceiptList(combinedPromo.getProducts()[0], combinedPromo.getProducts()[1])
-        when:
-            def result = producteService.countProductPriceWithPromotions(combinedPromo.getProducts()[0], 1, setOfOtherProducts as Set<ReceiptItem>)
-        then:
-            result == combinedPromo.getSpecialPrice()
-
-
-    }
 
 
     def createManyPromosForSampleProduct() {

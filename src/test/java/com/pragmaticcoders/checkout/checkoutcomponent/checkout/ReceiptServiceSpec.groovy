@@ -1,6 +1,8 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
+import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.lang.Void as Should
 
@@ -10,6 +12,11 @@ class ReceiptServiceSpec extends Specification {
     def receiptRepository = Mock(ReceiptRepository)
     def productService = Mock(ProductService)
     def receiptService = new ReceiptServiceImpl(productRepository, receiptRepository, productService)
+
+    @Shared
+    def sampleProductToCheck = createProduct()
+    @Shared
+    def promoList = createManyMultiPricedPromosForSampleProduct(sampleProductToCheck)
 
     Should "get product by it's name and return it's price for existing product name and existing receipt"() {
         given: "scanned product with name and quantity"
@@ -129,9 +136,121 @@ class ReceiptServiceSpec extends Specification {
             def result = receiptService.produceReceiptWithPayment(receiptWithItemsWithPromos.id)
         then:
             1 * receiptRepository.findOne(receiptWithItemsWithPromos.id) >> receiptWithItemsWithPromos
-            receiptWithItemsWithPromos.getItems().size() * productService.countProductPriceWithPromotions(_, _) >> 10
         and:
-            result.getPayment() == receiptWithItemsWithPromos.getItems().size() * 10
+            result.getPayment() == 25 // first item special price is 20 second is 5
+
+    }
+
+    // ========================================================================================================================================
+
+    @Unroll
+    Should "get real product price after promotions application for #quantity unit of product"() {
+        given: "existing receipt"
+            def receipt = createFreshReceipt()
+            addReceiptItemToReceipt(receipt, quantity)
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            result.payment == finalPrice
+        where:
+            quantity | finalPrice
+            1        | sampleProductToCheck.getPrice()
+            5        | promoList[2].getSpecialPrice()
+            7        | promoList[2].getSpecialPrice() + 2 * sampleProductToCheck.getPrice()
+            10       | promoList[0].getSpecialPrice()
+            11       | promoList[0].getSpecialPrice() + sampleProductToCheck.getPrice()
+            15       | promoList[0].getSpecialPrice() + promoList[2].getSpecialPrice()
+            20       | promoList[1].getSpecialPrice()
+            30       | promoList[1].getSpecialPrice() + promoList[0].getSpecialPrice()
+            100      | 5 * promoList[1].getSpecialPrice()
+            115      | 5 * promoList[1].getSpecialPrice() + promoList[0].getSpecialPrice() + promoList[2].getSpecialPrice()
+
+    }
+
+/*
+    Should "return 0 when calling to calculate product price with null product"() {
+        given: "null product"
+            Product product = null
+        when:
+            def result = producteService.countProductPriceWithPromotions(product as Product, 1)
+        then:
+            result == 0.0
+    }
+
+
+    Should "return 0 price, when quantity is less then 1"() {
+        given: "product name"
+            def productName = sampleProductToCheck.getName()
+        and: "product with 3 multipriced promos"
+            sampleProductToCheck.addPromo(promo1)
+            sampleProductToCheck.addPromo(promo2)
+            sampleProductToCheck.addPromo(promo3)
+        when:
+            def result = producteService.countProductPriceWithPromotions(productName, quantity)
+        then:
+            0 * productRepository.findByName(productName) >> sampleProductToCheck
+            result == finalPrice
+        where:
+            quantity | finalPrice
+            -1       | 0
+            0        | 0
+    }
+
+
+    Should "return combined promotion for single unit products when no other promotion exists"() {
+
+        given: "one combined promo for a sample product"
+            def combinedPromo = creaetCombinedPromoForSampleProduct()
+        and: "add two receipt items to a receipt"
+            def setOfOtherProducts = addTwoReceiptItemsToReceiptList(combinedPromo.getProducts()[0], combinedPromo.getProducts()[1])
+        when:
+            def result = producteService.countProductPriceWithPromotions(combinedPromo.getProducts()[0], 1, setOfOtherProducts as Set<ReceiptItem>)
+        then:
+            result == combinedPromo.getSpecialPrice()
+
+
+    }
+*/
+
+
+    def addReceiptItemToReceipt(receipt, quantity) {
+        def receiptItem = new ReceiptItem()
+        receiptItem.setProduct(sampleProductToCheck)
+        receiptItem.setReceipt(receipt)
+        receiptItem.setQuantity(quantity)
+        receipt.addItem(receiptItem)
+    }
+
+    def createFreshReceipt() {
+
+        Receipt receipt = new Receipt()
+        receipt.setId(1)
+        return receipt
+    }
+
+    def createManyMultiPricedPromosForSampleProduct(product) {
+
+        def promo1 = new Promo()
+        promo1.setUnitAmount(10)
+        promo1.setSpecialPrice(30)
+        promo1.addProduct(product)
+        promo1.setType(PromoType.MULTIPRICE)
+
+        def promo2 = new Promo()
+        promo2.setUnitAmount(20)
+        promo2.setSpecialPrice(35)
+        promo2.addProduct(product)
+        promo2.setType(PromoType.MULTIPRICE)
+
+        def promo3 = new Promo()
+        promo3.setUnitAmount(5)
+        promo3.setSpecialPrice(20)
+        promo3.addProduct(product)
+        promo3.setType(PromoType.MULTIPRICE)
+
+        List<Promo> promos = [promo1, promo2, promo3]
+        return promos
 
     }
 
@@ -142,11 +261,13 @@ class ReceiptServiceSpec extends Specification {
         Promo promo1 = new Promo()
         promo1.setUnitAmount(10)
         promo1.setSpecialPrice(20.0)
+        promo1.setType(PromoType.MULTIPRICE)
         promo1.addProduct(receipt.getItems()[0].product)
 
         Promo promo2 = new Promo()
         promo2.setUnitAmount(20)
         promo2.setSpecialPrice(35)
+        promo2.setType(PromoType.MULTIPRICE)
         promo2.addProduct(receipt.getItems()[1].product)
 
         return receipt

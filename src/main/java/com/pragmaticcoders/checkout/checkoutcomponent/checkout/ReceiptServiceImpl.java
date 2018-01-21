@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service class ReceiptServiceImpl implements ReceiptService {
 
@@ -43,18 +44,122 @@ import java.util.Optional;
 
         Receipt receipt = getReceiptById(receiptId);
         calculatePayment(receipt);
+        receiptRepository.save(receipt);
         return receipt;
     }
 
     private void calculatePayment(Receipt receipt) {
 
         double payment = receipt.getItems().stream()
-                .mapToDouble(receiptItem -> productService
-                        .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity(),
-                                receipt.getItems()))
+                .mapToDouble(receiptItem -> countProductPriceWithPromotions(receiptItem, receipt.getItems()))
                 .sum();
 
         receipt.setPayment(payment);
+
+    }
+
+    private Double countProductPriceWithPromotions(ReceiptItem receiptItem, Set<ReceiptItem> allItems) {
+        if (receiptItem.getQuantity() < 1 || receiptItem.getProduct() == null) {
+            return 0.0;
+        }
+        double priceForReceiptItem = applyPromotionsOnProductPrice(receiptItem, allItems);
+        receiptItem.setPrice(priceForReceiptItem);
+        return priceForReceiptItem;
+    }
+
+    private Double applyPromotionsOnProductPrice(ReceiptItem receiptItem, Set<ReceiptItem> allItems) {
+
+        double bestCombinedPromoPrice = getMostBeneficialPromoPrice(receiptItem.getProduct(), receiptItem.getQuantity(),
+                allItems);
+        List<Promo> promotions = chooseMostBeneficialMultiPricedPromotion(receiptItem.getProduct(),
+                receiptItem.getQuantity());
+        double bestMultiPricePromoPrice = countMultiPricedPromotion(promotions, receiptItem.getProduct(),
+                receiptItem.getQuantity());
+
+        return bestCombinedPromoPrice <= bestMultiPricePromoPrice ? bestCombinedPromoPrice : bestMultiPricePromoPrice;
+
+    }
+
+    private double countMultiPricedPromotion(List<Promo> promotions, Product product, int quantity) {
+
+        double promotionsPrice = promotions.stream()
+                .mapToDouble(promo -> promo.getSpecialPrice())
+                .sum();
+
+        int promoQuantity = promotions.stream()
+                .mapToInt(promo -> promo.getUnitAmount())
+                .sum();
+
+        return promotionsPrice + (quantity - promoQuantity) * product.getPrice();
+    }
+
+    private static double getMostBeneficialPromoPrice(Product product, int quantity,
+            Set<ReceiptItem> receiptItems) {
+
+        Set<Promo> combinedPromos = product.getPromos().stream()
+                .filter(promo -> promo.getType().equals(PromoType.COMBINED))
+                .collect(Collectors.toSet());
+
+        double minPrice = Integer.MAX_VALUE;
+
+        for (ReceiptItem receiptItem : receiptItems) {
+
+            Optional<Promo> optionalPromo = combinedPromos.stream()
+                    .filter(promo -> promo.getProducts().contains(receiptItem.getProduct()))
+                    .findFirst();
+
+            if (optionalPromo.isPresent()) {
+                double promoPrice =
+                        Math.min(quantity, receiptItem.getQuantity()) * optionalPromo.get().getSpecialPrice();
+                if (promoPrice < minPrice) {
+                    minPrice = promoPrice;
+                }
+            }
+        }
+
+        return minPrice;
+    }
+
+    private static List<Promo> chooseMostBeneficialMultiPricedPromotion(Product product,
+            int quantity) {
+
+        Set<Promo> allMultiPricedPromotions = product.getPromos().stream()
+                .filter(promo -> promo.getType().equals(PromoType.MULTIPRICE)).collect(
+                        Collectors.toSet());
+
+        HashMap<Integer, List<Promo>> promosForGivenQuantity = new HashMap<>();
+
+        //TODO: SIMPLIFY this algorithm
+        for (int q = 1; q <= quantity; q++) {
+            for (Promo promo : allMultiPricedPromotions) {
+                int promotionQuantity = promo.getUnitAmount();
+                if (q >= promotionQuantity) {
+
+                    List<Promo> promosForGivenValue = new ArrayList<>(
+                            promosForGivenQuantity.getOrDefault(q, new ArrayList<>()));
+                    if (promosForGivenValue.isEmpty()) {
+                        promosForGivenValue = new ArrayList<>(
+                                promosForGivenQuantity.getOrDefault(q - promotionQuantity, new ArrayList<>()));
+                        promosForGivenValue.add(promo);
+                    } else {
+
+                        if (q >= promotionQuantity) {
+
+                            List promotionsForPreviousCoins = new ArrayList<>(
+                                    promosForGivenQuantity.getOrDefault(q - promotionQuantity, new ArrayList<>()));
+
+                            if (promosForGivenValue.size() > promotionsForPreviousCoins.size()) {
+                                promosForGivenValue = new ArrayList<>(
+                                        promosForGivenQuantity.getOrDefault(q - promotionQuantity, new ArrayList<>()));
+                                promosForGivenValue.add(promo);
+                            }
+                        }
+                    }
+                    promosForGivenQuantity.put(q, promosForGivenValue);
+                }
+            }
+        }
+        return promosForGivenQuantity.getOrDefault(quantity, new ArrayList<>());
     }
 
     private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)
@@ -104,10 +209,5 @@ import java.util.Optional;
         }
 
         return product;
-    }
-
-    private double applyAsDouble(ReceiptItem item) throws ProductNotFoundException {
-        return productService
-                .countProductPriceWithPromotions(item.getProduct().getName(), item.getQuantity());
     }
 }
