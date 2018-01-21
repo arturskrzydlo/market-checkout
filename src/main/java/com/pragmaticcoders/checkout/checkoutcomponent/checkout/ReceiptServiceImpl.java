@@ -21,8 +21,8 @@ import java.util.Optional;
     @Transactional
     public Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
             throws ProductNotFoundException, ReceiptNotFoundException {
-        Product productFromRepo = getProductByProductName(product.getProductName());
 
+        Product productFromRepo = getProductByProductName(product.getProductName());
         Receipt receipt = updateReceipt(productFromRepo, receiptId, product.getQuantity());
         receiptRepository.save(receipt);
         return productFromRepo.getPrice() * product.getQuantity();
@@ -35,8 +35,21 @@ import java.util.Optional;
         return receiptRepository.save(receipt);
     }
 
-    @Override public Receipt produceReceiptWithPayment(Integer receiptId) {
-        return new Receipt();
+    @Override
+    public Receipt produceReceiptWithPayment(Integer receiptId) throws ReceiptNotFoundException {
+
+        Receipt receipt = getReceiptById(receiptId);
+        calculatePayment(receipt);
+        return receipt;
+    }
+
+    private void calculatePayment(Receipt receipt) {
+
+        double payment = receipt.getItems().stream()
+                .mapToDouble(item -> item.getQuantity() * item.getProduct().getPrice())
+                .sum();
+
+        receipt.setPayment(payment);
     }
 
     private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)

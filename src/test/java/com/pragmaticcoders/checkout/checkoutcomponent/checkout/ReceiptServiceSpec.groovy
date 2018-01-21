@@ -65,7 +65,6 @@ class ReceiptServiceSpec extends Specification {
                 Receipt receipt1 ->
                     assert receipt1.getItems().size() == 1
                     assert receipt1.getItems()[0].getId() != null
-
             }
     }
 
@@ -119,9 +118,7 @@ class ReceiptServiceSpec extends Specification {
         then:
             1 * receiptRepository.findOne(receiptWithItems.id) >> receiptWithItems
         and:
-            result == calculateExpectedSimpleReceiptPayment(receiptWithItems)
-
-
+            result.getPayment() == calculateExpectedSimpleReceiptPayment(receiptWithItems).getPayment()
     }
 
 
@@ -133,7 +130,6 @@ class ReceiptServiceSpec extends Specification {
         product.setPrice(5.0)
 
         return product
-
     }
 
     def calculateExpectedSimpleReceiptPayment(Receipt receipt) {
