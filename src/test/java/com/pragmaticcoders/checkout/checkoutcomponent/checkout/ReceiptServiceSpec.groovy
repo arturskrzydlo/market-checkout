@@ -118,8 +118,9 @@ class ReceiptServiceSpec extends Specification {
             def result = receiptService.produceReceiptWithPayment(receiptWithItems.id)
         then:
             1 * receiptRepository.findOne(receiptWithItems.id) >> receiptWithItems
+            receiptWithItems.getItems().size() * productService.countProductPriceWithPromotions(_, _) >> 10
         and:
-            result.getPayment() == calculateExpectedSimpleReceiptPayment(receiptWithItems).getPayment()
+            result.getPayment() == 10
     }
 
     Should "return 0 when there are no items on receipt, when calling to calculate payment"() {
