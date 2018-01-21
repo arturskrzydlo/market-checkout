@@ -87,6 +87,16 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
+    Should "return 0 when calling to calculate product price with null product"() {
+        given: "null product"
+            Product product = null
+        when:
+            def result = producteService.countProductPriceWithPromotions(product as Product, 1)
+        then:
+            result == 0.0
+    }
+
+
     Should "return 0 price, when quantity is less then 1"() {
         given: "product name"
             def productName = sampleProductToCheck.getName()
