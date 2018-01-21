@@ -48,11 +48,11 @@ import java.util.Optional;
 
     private void calculatePayment(Receipt receipt) {
 
-        double payment = 0.0;
-        for (ReceiptItem receiptItem : receipt.getItems()) {
-            payment = +productService
-                    .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity());
-        }
+        double payment = receipt.getItems().stream()
+                .mapToDouble(receiptItem -> productService
+                        .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity()))
+                .sum();
+
         receipt.setPayment(payment);
     }
 

@@ -122,7 +122,7 @@ class ReceiptServiceSpec extends Specification {
             result.getPayment() == 0.0
     }
 
-    Should "return receipt with total price for receipt's items when multipriced promo for at least one product is available"() {
+    Should "return receipt with total price for receipt's items when multipriced promo "() {
         given: "mock receipt which will be returned from repository"
             def receiptWithItemsWithPromos = createReceiptWithReceiptItemsWithPromos()
         when: "calling method to produce receipt (calculate payment)"
@@ -131,7 +131,7 @@ class ReceiptServiceSpec extends Specification {
             1 * receiptRepository.findOne(receiptWithItemsWithPromos.id) >> receiptWithItemsWithPromos
             receiptWithItemsWithPromos.getItems().size() * productService.countProductPriceWithPromotions(_, _) >> 10
         and:
-            result.getPayment() == 10
+            result.getPayment() == receiptWithItemsWithPromos.getItems().size() * 10
 
     }
 
