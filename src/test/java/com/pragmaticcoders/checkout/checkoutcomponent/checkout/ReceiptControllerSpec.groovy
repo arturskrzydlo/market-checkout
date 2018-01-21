@@ -113,7 +113,7 @@ class ReceiptControllerSpec extends Specification {
             1 * receiptService.createNewReceipt() >> freshlyCreatedReceipt
     }
 
-    Should "return receipt with total price for shopping, when calling for receipt billing"() {
+    Should "return receipt with total price for shopping and detailes list of product and their prices, when calling for receipt billing"() {
         given: "existing receipt with receipt items"
             def receipt = createReceiptWithReceiptItems()
             def expectedReceiptWithPayment = calculateExpectedSimpleReceiptPayment(receipt)
@@ -125,12 +125,11 @@ class ReceiptControllerSpec extends Specification {
             result.andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.payment').value(equalTo(expectedReceiptWithPayment.payment)))
+                    .andExpect(jsonPath('$.items').value(hasSize(expectedReceiptWithPayment.items.size())))
 
     }
 
-    Should "return receipt with detailed list of products with ther prices, when calling for receipt billing"() {
 
-    }
 
 
     def createProduct() {
