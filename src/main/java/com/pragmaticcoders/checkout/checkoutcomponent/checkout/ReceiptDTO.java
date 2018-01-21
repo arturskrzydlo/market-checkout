@@ -10,8 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ToString
-public class ReceiptDTO {
+@ToString class ReceiptDTO {
 
     private String receiptId;
     private Double payment;

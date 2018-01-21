@@ -129,6 +129,22 @@ class ReceiptControllerSpec extends Specification {
 
     }
 
+    Should "return receipt with total price for shopping equals 0 and no list of product, when calling for receipt billing without any items on receipt (freshly created receipt)"() {
+        given: "existing receipt"
+            def receipt = createFreshReceipt()
+            def expectedReceiptWithPayment = calculateExpectedSimpleReceiptPayment(receipt)
+        when:
+            def result = mockMvc.perform(get("/receipt/" + receipt.getId()))
+        then:
+            1 * receiptService.produceReceiptWithPayment(receipt.getId()) >> expectedReceiptWithPayment
+        and:
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.payment').value(equalTo(expectedReceiptWithPayment.payment)))
+                    .andExpect(jsonPath('$.items').isEmpty())
+
+    }
+
     Should "return HttpStatus.NOT_FOUND for not existing receipt name when calling for receipt billing"() {
         given: "not existing receipt"
             def notExistingReceipt = createFreshReceipt()
@@ -147,9 +163,6 @@ class ReceiptControllerSpec extends Specification {
                     .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
                     .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(notExistingReceipt.id.toString())))
     }
-
-
-
 
     def createProduct() {
 
