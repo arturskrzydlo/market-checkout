@@ -15,7 +15,7 @@ class ReceiptServiceSpec extends Specification {
             def scannedProduct = createScannedProduct()
         and:
             def productFound = createProduct()
-            def existingReceipt = createReceiptWithReceiptItems()
+            def existingReceipt = createReceiptWithReceiptItem()
         and: "repository return receipt with cart item for product"
             receiptRepository.findOne(existingReceipt.getId()) >> existingReceipt
         when: "add product has been called"
@@ -53,7 +53,7 @@ class ReceiptServiceSpec extends Specification {
             def scannedProduct = createScannedProduct()
         and:
             def productFound = createProduct()
-            def existingReceipt = createReceiptWithReceiptItems()
+            def existingReceipt = createReceiptWithReceiptItem()
         and: "repository return receipt with cart item for product"
             receiptRepository.findOne(existingReceipt.getId()) >> existingReceipt
         when: "add product has been called"
@@ -112,7 +112,7 @@ class ReceiptServiceSpec extends Specification {
 
     Should "return receipt with total price for receipt's items when no promos for products"() {
         given: "mock receipt which will be returned from repository"
-            def receiptWithItems = createReceiptWithReceiptItems()
+            def receiptWithItems = createReceiptWithReceiptItem()
         when: "calling method to produce receipt (calculate payment)"
             def result = receiptService.produceReceiptWithPayment(receiptWithItems.id)
         then:
@@ -132,6 +132,35 @@ class ReceiptServiceSpec extends Specification {
             result.getPayment() == 0.0
     }
 
+    Should "return receipt with total price for receipt's items when multipriced promo for at least one product is available"() {
+        given: "mock receipt which will be returned from repository"
+            def receiptWithItemsWithPromos = createReceiptWithReceiptItemsWithPromos()
+        when:
+        when: "calling method to produce receipt (calculate payment)"
+            def result = receiptService.produceReceiptWithPayment(receiptWithItemsWithPromos.id)
+        then:
+            1 * receiptRepository.findOne(receiptWithItemsWithPromos.id) >> receiptWithItemsWithPromos
+        and:
+            result.getPayment() != calculateExpectedSimpleReceiptPayment(receiptWithItemsWithPromos).getPayment()
+
+    }
+
+    def createReceiptWithReceiptItemsWithPromos() {
+
+        Receipt receipt = createReceiptWithReceiptItems()
+
+        Promo promo1 = new Promo()
+        promo1.setUnitAmount(10)
+        promo1.setSpecialPrice(20.0)
+        promo1.addProduct(receipt.getItems()[0].product)
+
+        Promo promo2 = new Promo()
+        promo2.setUnitAmount(20)
+        promo2.setSpecialPrice(35)
+        promo2.addProduct(receipt.getItems()[1].product)
+
+        return receipt
+    }
 
     def createProduct() {
 
@@ -152,7 +181,7 @@ class ReceiptServiceSpec extends Specification {
         return receipt
     }
 
-    def createReceiptWithReceiptItems() {
+    def createReceiptWithReceiptItem() {
 
         def receipt = createExistingReceiptWithoutReceiptItems()
 
@@ -164,6 +193,25 @@ class ReceiptServiceSpec extends Specification {
         receipt.addItem(receiptItem)
         return receipt
     }
+
+    def createReceiptWithReceiptItems() {
+
+        def receipt = createReceiptWithReceiptItem()
+
+        Product keyboard = new Product()
+        keyboard.setName("keyboard")
+        keyboard.setPrice(20.0)
+
+        ReceiptItem keyboardItem = new ReceiptItem()
+        keyboardItem.setQuantity(10)
+        keyboardItem.setProduct(keyboard)
+        keyboardItem.setId(2)
+
+        receipt.addItem(keyboardItem)
+
+        return receipt
+    }
+
 
     def createExistingReceiptWithoutReceiptItems() {
 
