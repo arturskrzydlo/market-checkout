@@ -121,6 +121,17 @@ class ReceiptServiceSpec extends Specification {
             result.getPayment() == calculateExpectedSimpleReceiptPayment(receiptWithItems).getPayment()
     }
 
+    Should "return 0 when there are no items on receipt, when calling to calculate payment"() {
+        given: "mock receipt which will be returned from repository"
+            def receiptWithoutItems = createExistingReceiptWithoutReceiptItems()
+        when: "calling method to produce receipt (calculate payment)"
+            def result = receiptService.produceReceiptWithPayment(receiptWithoutItems.id)
+        then:
+            1 * receiptRepository.findOne(receiptWithoutItems.id) >> receiptWithoutItems
+        and:
+            result.getPayment() == 0.0
+    }
+
 
     def createProduct() {
 
