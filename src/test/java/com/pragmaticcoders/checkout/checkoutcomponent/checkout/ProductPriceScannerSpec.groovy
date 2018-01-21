@@ -130,14 +130,14 @@ class ProductPriceScannerSpec extends Specification {
             exception.message == "Product with identity " + nonExistingProductName + " does not exists"
     }
 
-    Should "return combined promotion when no other promotion exists"() {
+    Should "return combined promotion for single unit products when no other promotion exists"() {
 
         given: "one combined promo for a sample product"
             def combinedPromo = creaetCombinedPromoForSampleProduct()
-        and:
-            def listOfOtherProducts = [combinedPromo.getProducts()[1]]
+        and: "add two receipt items to a receipt"
+            def setOfOtherProducts = addTwoReceiptItemsToReceiptList(combinedPromo.getProducts()[0], combinedPromo.getProducts()[1])
         when:
-            def result = producteService.countProductPriceWithPromotions(combinedPromo.getProducts()[0], 2, listOfOtherProducts)
+            def result = producteService.countProductPriceWithPromotions(combinedPromo.getProducts()[0], 1, setOfOtherProducts as Set<ReceiptItem>)
         then:
             result == combinedPromo.getSpecialPrice()
 
@@ -168,11 +168,27 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
+
+    def addTwoReceiptItemsToReceiptList(Product product1, Product product2) {
+        def setOfOtherProducts = []
+        ReceiptItem receiptItem = new ReceiptItem()
+        receiptItem.setProduct(product1)
+        receiptItem.setQuantity(1)
+        setOfOtherProducts.add(receiptItem)
+
+        ReceiptItem receiptItem1 = new ReceiptItem()
+        receiptItem1.setProduct(product2)
+        receiptItem1.setQuantity(1)
+        setOfOtherProducts.add(receiptItem1)
+
+        return setOfOtherProducts
+    }
+
     def creaetCombinedPromoForSampleProduct() {
 
         Product product1 = createSampleProduct()
         Promo combinedPromo = new Promo()
-        combinedProm.setType(PromoType.COMBINED)
+        combinedPromo.setType(PromoType.COMBINED)
         combinedPromo.addProduct(product1)
 
         Product product2 = new Product()

@@ -18,6 +18,7 @@ import java.util.Set;
 
     private Double specialPrice;
     private int unitAmount;
+    private PromoType type;
 
     @ManyToMany
     @JoinTable(

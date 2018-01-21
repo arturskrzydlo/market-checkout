@@ -50,7 +50,8 @@ import java.util.Optional;
 
         double payment = receipt.getItems().stream()
                 .mapToDouble(receiptItem -> productService
-                        .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity()))
+                        .countProductPriceWithPromotions(receiptItem.getProduct(), receiptItem.getQuantity(),
+                                receipt.getItems()))
                 .sum();
 
         receipt.setPayment(payment);

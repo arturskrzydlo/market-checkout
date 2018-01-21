@@ -32,15 +32,16 @@ import java.util.stream.StreamSupport;
 
         Optional<Product> product = Optional.ofNullable(productRepository.findByName(productName));
         return countProductPriceWithPromotions(product.orElseThrow(() -> new ProductNotFoundException(productName)),
-                quantity);
+                quantity, Collections.emptySet());
     }
 
     @Override
-    public Double countProductPriceWithPromotions(Product product, int quantity) {
+    public Double countProductPriceWithPromotions(Product product, int quantity,
+            Set<ReceiptItem> allProductsInReceipt) {
         if (quantity < 1 || product == null) {
             return 0.0;
         }
-        return applyPromotionsOnProductPrice(product, quantity);
+        return applyPromotionsOnProductPrice(product, quantity, allProductsInReceipt);
     }
 
     @Override public List<Product> getAllProducts() {
@@ -48,9 +49,19 @@ import java.util.stream.StreamSupport;
                 .collect(Collectors.toList());
     }
 
-    private static Double applyPromotionsOnProductPrice(Product product, int quantity) {
+    //TODO can shorten method argumentts to two - refactor !
+    private Double applyPromotionsOnProductPrice(Product product, int quantity,
+            Set<ReceiptItem> allProductsInReceipt) {
 
-        List<Promo> promotions = chooseMostBeneficialMultiPricedPromotion(product.getPromos(), quantity);
+        double bestCombinedPromoPrice = chooseMostBeneficialCombinedPromo(product, quantity, allProductsInReceipt);
+        List<Promo> promotions = chooseMostBeneficialMultiPricedPromotion(product, quantity);
+        double bestMultiPricePromoPrice = countMultiPricedPromotion(promotions, product, quantity);
+
+        return bestCombinedPromoPrice <= bestMultiPricePromoPrice ? bestCombinedPromoPrice : bestMultiPricePromoPrice;
+
+    }
+
+    private double countMultiPricedPromotion(List<Promo> promotions, Product product, int quantity) {
 
         double promotionsPrice = promotions.stream()
                 .mapToDouble(promo -> promo.getSpecialPrice())
@@ -63,8 +74,39 @@ import java.util.stream.StreamSupport;
         return promotionsPrice + (quantity - promoQuantity) * product.getPrice();
     }
 
-    private static List<Promo> chooseMostBeneficialMultiPricedPromotion(Set<Promo> allMultiPricedPromotions,
+    private static double chooseMostBeneficialCombinedPromo(Product product, int quantity,
+            Set<ReceiptItem> receiptItems) {
+
+        Set<Promo> combinedPromos = product.getPromos().stream()
+                .filter(promo -> promo.getType().equals(PromoType.COMBINED))
+                .collect(Collectors.toSet());
+
+        double minPrice = Integer.MAX_VALUE;
+
+        for (ReceiptItem receiptItem : receiptItems) {
+
+            Optional<Promo> optionalPromo = combinedPromos.stream()
+                    .filter(promo -> promo.getProducts().contains(receiptItem.getProduct()))
+                    .findFirst();
+
+            if (optionalPromo.isPresent()) {
+                double promoPrice =
+                        Math.min(quantity, receiptItem.getQuantity()) * optionalPromo.get().getSpecialPrice();
+                if (promoPrice < minPrice) {
+                    minPrice = promoPrice;
+                }
+            }
+        }
+
+        return minPrice;
+    }
+
+    private static List<Promo> chooseMostBeneficialMultiPricedPromotion(Product product,
             int quantity) {
+
+        Set<Promo> allMultiPricedPromotions = product.getPromos().stream()
+                .filter(promo -> promo.getType().equals(PromoType.MULTIPRICE)).collect(
+                        Collectors.toSet());
 
         HashMap<Integer, List<Promo>> promosForGivenQuantity = new HashMap<>();
 
