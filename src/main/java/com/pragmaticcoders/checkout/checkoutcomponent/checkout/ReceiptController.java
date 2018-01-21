@@ -30,7 +30,7 @@ import java.util.Map;
     }
 
     @GetMapping("/{receiptId}")
-    public ReceiptDTO getReceiptWithPayment(@PathVariable Integer receiptId) {
+    public ReceiptDTO getReceiptWithPayment(@PathVariable Integer receiptId) throws ReceiptNotFoundException {
 
         return convertToDTO(receiptService.produceReceiptWithPayment(receiptId));
     }
