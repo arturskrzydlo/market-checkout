@@ -238,7 +238,8 @@ class ReceiptServiceSpec extends Specification {
             result.payment == 501.5 //because combined promotions should be cheaper (multiprice promotions is just for one toothbrush)
     }
 
-    Should "return price with multiprice promotiont when combined and multiprice promotions exists and multiprice is more beneficial"() {
+    //This could return unpredictable result :(
+    Should "return price with multiprice promotion when combined and multiprice promotions exists and multiprice is more beneficial"() {
 
         given: "one receipt with combined and multipriced promo"
             def receipt = createReceiptWithMultiPriceAndCombinedPromoWhereMultiPriceMoreBeneficial()
@@ -271,6 +272,33 @@ class ReceiptServiceSpec extends Specification {
             1 * receiptRepository.findOne(receipt.id) >> receipt
             receipt.items[0].price == 65.0
 
+    }
+
+    Should "close receipt when status update to close is send"() {
+
+        given: "open receipt"
+            def receipt = createFreshReceipt()
+        when:
+            receiptService.updateReceiptState(false, receipt.id)
+        then:
+            1 * receiptRepository.save(_) >> {
+                Receipt receipt1 ->
+                    assert !receipt1.isOpened()
+            }
+        and:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+    }
+
+    Should "throw ReceiptNotFoundException if receipt doesn't exists for changing receipt status"() {
+        given: "not existing receipt id"
+            def receiptId = 1
+        when:
+            receiptService.updateReceiptState(false, receiptId)
+        then:
+            ReceiptNotFoundException exception = thrown()
+            exception.message == "Receipt with identity " + receiptId + " does not exists"
+        and:
+            1 * receiptRepository.findOne(receiptId) >> null
     }
 
     def checkIfAllReceiptItemHasPriceAssignedToThem(receipt) {

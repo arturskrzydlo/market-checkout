@@ -50,6 +50,13 @@ import java.util.stream.Collectors;
         return receipt;
     }
 
+    @Override public void updateReceiptState(boolean opened, Integer receiptId) throws ReceiptNotFoundException {
+
+        Receipt receipt = getReceiptById(receiptId);
+        receipt.setOpened(opened);
+        receiptRepository.save(receipt);
+    }
+
     private void calculatePayment(Receipt receipt) {
 
         double payment = receipt.getItems().stream()

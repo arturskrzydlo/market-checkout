@@ -10,4 +10,6 @@ interface ReceiptService {
     Receipt createNewReceipt();
 
     Receipt produceReceiptWithPayment(Integer receiptId) throws ReceiptNotFoundException;
+
+    void updateReceiptState(boolean opened, Integer receiptId) throws ReceiptNotFoundException;
 }

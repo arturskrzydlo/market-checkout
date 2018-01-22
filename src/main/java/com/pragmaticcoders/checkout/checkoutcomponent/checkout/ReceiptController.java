@@ -4,6 +4,7 @@ import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundEx
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -17,11 +18,18 @@ import java.util.Map;
     @Autowired
     private ModelMapper modelMapper;
 
-    //TODO maybe update whole receipt - > change scannedProductDTO to ReceiptDTO
-    @PatchMapping("/{receiptId}")
+    @PatchMapping("/{receiptId}/product")
     public Map<String, Double> scanProduct(@RequestBody ScannedProductDTO scannedProductDTO,
             @PathVariable Integer receiptId) throws ProductNotFoundException, ReceiptNotFoundException {
         return Collections.singletonMap("price", receiptService.addProductToReceipt(scannedProductDTO, receiptId));
+    }
+
+    @PatchMapping("/{receiptId}")
+    public ResponseEntity<?> updateReceiptState(@RequestBody ReceiptStateDTO receiptStateDTO,
+            @PathVariable Integer receiptId) throws ReceiptNotFoundException {
+
+        receiptService.updateReceiptState(receiptStateDTO.isOpened(), receiptId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping

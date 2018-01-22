@@ -43,7 +43,7 @@ class ReceiptControllerSpec extends Specification {
             def expectedResult = product.getPrice() * scannedProduct.getQuantity()
             def existingReceiptId = 1
         when: "product is scanned"
-            def result = mockMvc.perform(patch("/receipt/" + existingReceiptId)
+            def result = mockMvc.perform(patch("/receipt/" + existingReceiptId + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
@@ -62,7 +62,7 @@ class ReceiptControllerSpec extends Specification {
             def scannedProduct = createScannedProduct()
             def receiptId = 10
         when:
-            def result = this.mockMvc.perform(patch("/receipt/" + receiptId)
+            def result = this.mockMvc.perform(patch("/receipt/" + receiptId + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
@@ -84,7 +84,7 @@ class ReceiptControllerSpec extends Specification {
             def scannedProduct = createScannedProduct()
             def receiptId = 10
         when:
-            def result = this.mockMvc.perform(patch("/receipt/" + receiptId)
+            def result = this.mockMvc.perform(patch("/receipt/" + receiptId + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
@@ -168,6 +168,45 @@ class ReceiptControllerSpec extends Specification {
                     .andExpect(jsonPath('$.message').isNotEmpty())
                     .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
                     .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(notExistingReceipt.id.toString())))
+    }
+
+    Should "return NO_CONTENT status when updating receipt status"() {
+        given: "change status object"
+            def receiptState = new ReceiptStateDTO()
+            receiptState.setOpened(true)
+        and: "existing receipt id"
+            def receiptId = 1
+        when:
+            def result = mockMvc.perform(patch("/receipt/" + receiptId)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(receiptState)))
+        then:
+            result.andExpect(status().isNoContent())
+                    .andExpect(content().string(""))
+    }
+
+    Should "return HttpStatus.NOT_FOUND for not existing receipt name when calling for receipt state update"() {
+        given: "not existing receipt"
+            def receiptId = 1
+        and: "change status object"
+            def receiptState = new ReceiptStateDTO()
+            receiptState.setOpened(true)
+        when:
+            def result = mockMvc.perform(patch("/receipt/" + receiptId)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(receiptState)))
+        then:
+            1 * receiptService.updateReceiptState(receiptState.isOpened(), receiptId) >> {
+                throw new ReceiptNotFoundException(receiptId)
+            }
+        and:
+            result.andExpect(status().isNotFound())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.NOT_FOUND.name())))
+                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
+                    .andExpect(jsonPath('$.message').isNotEmpty())
+                    .andExpect(jsonPath('$.subErrors').value(hasSize(1)))
+                    .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(receiptId.toString())))
     }
 
 
