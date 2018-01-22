@@ -5,7 +5,7 @@ import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundEx
 interface ReceiptService {
 
     Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
-            throws ProductNotFoundException, ReceiptNotFoundException;
+            throws ProductNotFoundException, ReceiptNotFoundException, ReceiptClosedException;
 
     Receipt createNewReceipt();
 

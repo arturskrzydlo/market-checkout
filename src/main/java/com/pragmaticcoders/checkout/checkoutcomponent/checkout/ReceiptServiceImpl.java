@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
     @Override
     @Transactional
     public Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
-            throws ProductNotFoundException, ReceiptNotFoundException {
+            throws ProductNotFoundException, ReceiptNotFoundException, ReceiptClosedException {
 
         Product productFromRepo = productService.findProductByName(product.getProductName());
         Receipt receipt = updateReceipt(productFromRepo, receiptId, product.getQuantity());
@@ -245,9 +245,13 @@ import java.util.stream.Collectors;
     }
 
     private Receipt updateReceipt(Product product, Integer receiptId, Integer quantity)
-            throws ReceiptNotFoundException {
+            throws ReceiptNotFoundException, ReceiptClosedException {
 
         Receipt receipt = getReceiptById(receiptId);
+
+        if (!receipt.isOpened()) {
+            throw new ReceiptClosedException(receiptId);
+        }
         Optional<ReceiptItem> receiptItemForProduct = receipt.getItems().stream()
                 .filter(receiptItem -> receiptItem.getProduct().equals(product) && receiptItem.getReceipt()
                         .equals(receipt))

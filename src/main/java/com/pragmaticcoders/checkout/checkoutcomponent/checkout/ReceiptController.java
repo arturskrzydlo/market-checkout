@@ -20,7 +20,8 @@ import java.util.Map;
 
     @PatchMapping("/{receiptId}/product")
     public Map<String, Double> scanProduct(@RequestBody ScannedProductDTO scannedProductDTO,
-            @PathVariable Integer receiptId) throws ProductNotFoundException, ReceiptNotFoundException {
+            @PathVariable Integer receiptId)
+            throws ProductNotFoundException, ReceiptNotFoundException, ReceiptClosedException {
         return Collections.singletonMap("price", receiptService.addProductToReceipt(scannedProductDTO, receiptId));
     }
 

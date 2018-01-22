@@ -62,7 +62,7 @@ class ScanningProductsAcceptSpec extends Specification {
         and: "existing product in stock"
             def productInStock = createNewProduct(productForScanning.productName, 5.0)
         when:
-            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receipt.id)
+            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receipt.id + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(productForScanning)))
         then: "produtct with its normal price is returned"
@@ -98,7 +98,7 @@ class ScanningProductsAcceptSpec extends Specification {
         and: "not existing receipt id"
             def receiptId = 1
         when:
-            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptId)
+            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptId + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(productForScanning)))
         then:
@@ -119,7 +119,7 @@ class ScanningProductsAcceptSpec extends Specification {
         and:
             def receiptId = 1
         when:
-            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptId)
+            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptId + "/product")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(productForScanning)))
         then:
@@ -132,9 +132,40 @@ class ScanningProductsAcceptSpec extends Specification {
                     .andExpect(jsonPath('$.subErrors[0].rejectedValue').value(equalTo(productForScanning.productName)))
     }
 
-/*    Should "can back to receipt, change it and do calculation once again until receipt exists in a system"(){
-
-    }*/
+    Should "not be able to get back to receipt, and add new product once receipt has been closed"() {
+        given: "existing opened receipt"
+            def receipt = createEmptyReceipt()
+        and: "product to scan which exists in stock"
+            def productForScanning = new ScannedProductDTO()
+            productForScanning.productName = "toothbrush"
+            productForScanning.quantity = 2
+            createNewProduct(productForScanning.productName, 5.0)
+        and: "second product to scan which exists in stock"
+            def secondProductForScanning = new ScannedProductDTO()
+            secondProductForScanning.productName = "keyboard"
+            secondProductForScanning.quantity = 1
+            createNewProduct(secondProductForScanning.productName, 5.0)
+        and: "add some product"
+            mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receipt.id + "/product")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(productForScanning)))
+        when: "receipt is being closed"
+            def receiptState = new ReceiptStateDTO()
+            receiptState.setOpened(false)
+            mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receipt.id)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(receiptState)))
+        and: "next product is being added"
+            def result = mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receipt.id + "/product")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(secondProductForScanning)))
+        then: "further product scanning should not be possible and exception should be thrown"
+            result.andExpect(status().isUnprocessableEntity())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.status').value(equalTo(HttpStatus.UNPROCESSABLE_ENTITY.name())))
+                    .andExpect(jsonPath('$.timestamp').isNotEmpty())
+                    .andExpect(jsonPath('$.message').isNotEmpty())
+    }
 
     def createNewProduct(String name, Double price) {
         productService.createProduct(name, price)
