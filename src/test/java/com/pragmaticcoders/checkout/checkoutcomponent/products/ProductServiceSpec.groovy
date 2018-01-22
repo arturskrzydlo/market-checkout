@@ -44,7 +44,7 @@ class ProductServiceSpec extends Specification {
 
     }
 
-    Should "throw ProductNotFoundException when given name is not name of existing product"() {
+    Should "throw ProductNotFoundException when given name is not name of existing product when getting actual price of a product"() {
 
         given: "name of not existing product"
             def nonExistingProductName = "nonExistingProductName"
@@ -66,19 +66,80 @@ class ProductServiceSpec extends Specification {
             def price = 5.0
             def name = "toothbrush"
         when:
-            def createdProduct = producteService.createProduct()
+            def createdProduct = producteService.createProduct(name as String, price as Double)
         then: "created product has correct price, name and not empty id"
-            createdProduct.price == price
-            createdProduct.name == name
-            createdProduct.id != null
+            createdProduct.get().price == price
+            createdProduct.get().name == name
+            createdProduct.get().id != null
         and:
             1 * productRepository.save(_) >> {
                 Product product = new Product()
                 product.setPrice(price)
                 product.setName(name)
+                product.setId(1)
                 return product
             }
+    }
 
+    Should "return empty Product without id assigned to it if one of the parameters (name or price) is missing"() {
+        given: "name product"
+            def name = "toothbrush"
+        when:
+            def emptyProduct = producteService.createProduct(name as String, null)
+        then: "empty product returned"
+            !emptyProduct.isPresent()
+        and:
+            0 * productRepository.save(_)
+
+    }
+
+    Should "return product when product with that name exists in repository"() {
+        given: "existing product"
+            def product = createSampleProduct()
+            product.setId(1)
+        when: "calling for existing product name"
+            def productFromRepo = producteService.findProductByName(product.name)
+        then:
+            1 * productRepository.findByName(product.name) >> product
+        and:
+            productFromRepo.id != null
+            productFromRepo.name == product.name
+    }
+
+    Should "throw ProductNotFoundException when given name is not name of existing product when trying to find product by name"() {
+
+        given: "name of not existing product"
+            def nonExistingProductName = "nonExistingProductName"
+
+        and: "repository can't find such a product and return null instead"
+            productRepository.findByName(nonExistingProductName) >> null
+        when: "trying to find product by name"
+            producteService.findProductByName(nonExistingProductName)
+        then:
+            ProductNotFoundException exception = thrown()
+            exception.message == "Product with identity " + nonExistingProductName + " does not exists"
+
+    }
+
+    Should "return empty list when no product are available in stock"() {
+        when:
+            def result = producteService.getAllProducts()
+        then:
+            1 * productRepository.findAll() >> Collections.emptyList()
+        and:
+            result.size() == 0
+    }
+
+    Should "return 2 elements list when two products are available in stock"() {
+        given: "two products which are available in stock"
+            def product1 = new Product()
+            def product2 = new Product()
+        when:
+            def result = producteService.getAllProducts()
+        then:
+            1 * productRepository.findAll() >> [product1, product2]
+        and:
+            result.size() == 2
 
     }
 
@@ -146,7 +207,6 @@ class ProductServiceSpec extends Specification {
         Product product = new Product()
         product.setName("toothbrush")
         product.setPrice(5.0)
-        product.setAmountInStorage(10)
 
         return product
     }
