@@ -283,7 +283,7 @@ class ReceiptControllerSpec extends Specification {
         }
 
         @Bean
-        ReceiptService cartService() {
+        ReceiptService receiptService() {
             return detachedMockFactory.Mock(ReceiptService)
         }
 

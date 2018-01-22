@@ -1,7 +1,10 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.products;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoDTO;
 import lombok.*;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -13,4 +16,5 @@ public class ProductDTO {
 
     private String name;
     private Double price;
+    private Set<PromoDTO> promos;
 }

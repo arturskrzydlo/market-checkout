@@ -3,6 +3,7 @@ package com.pragmaticcoders.checkout.checkoutcomponent.products
 import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo
 import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoService
 import org.hamcrest.Matchers
+import org.modelmapper.ModelMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -147,6 +148,11 @@ class ProductControllerSpec extends Specification {
         @Bean
         PromoService promoService() {
             return detachedMockFactory.Mock(PromoService)
+        }
+
+        @Bean
+        ModelMapper getModelMapper() {
+            return new ModelMapper()
         }
     }
 }

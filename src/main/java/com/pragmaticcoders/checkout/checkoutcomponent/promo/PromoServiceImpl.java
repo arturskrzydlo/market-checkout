@@ -6,6 +6,7 @@ import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -20,6 +21,7 @@ class PromoServiceImpl implements PromoService {
         this.productService = productService;
     }
 
+    @Transactional
     @Override public Promo createMultiPricedPromo(String productName, Integer unitAmount, Double specialPrice)
             throws ProductNotFoundException {
 
@@ -29,6 +31,7 @@ class PromoServiceImpl implements PromoService {
         promo.addProduct(product);
         promo.setSpecialPrice(specialPrice);
         promo.setUnitAmount(unitAmount);
+        promo.setType(PromoType.MULTIPRICE);
 
         promoRepository.save(promo);
         return promo;

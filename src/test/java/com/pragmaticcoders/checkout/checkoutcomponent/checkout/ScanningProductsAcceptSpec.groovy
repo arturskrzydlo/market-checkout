@@ -1,7 +1,9 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product
 import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -9,6 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
@@ -18,6 +21,7 @@ import java.lang.Void as Should
 
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.hasSize
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -36,6 +40,9 @@ class ScanningProductsAcceptSpec extends Specification {
 
     @Autowired
     private ProductService productService
+
+    @Autowired
+    private PromoService promoService
 
 
     Should "user can sucessfully open new receipt"() {
@@ -167,8 +174,52 @@ class ScanningProductsAcceptSpec extends Specification {
                     .andExpect(jsonPath('$.message').isNotEmpty())
     }
 
+    @Transactional
+    Should "be possible to open receipt, add two products, with promotions, and get receipt with correct items number and correct overall payment"() {
+        given: "product to scan which exists in stock"
+            def productForScanning = new ScannedProductDTO()
+            productForScanning.productName = "toothbrush"
+            productForScanning.quantity = 2
+            def createdProductOne = createNewProductWithMultiPricePromo(productForScanning.productName, 5.0, productForScanning.quantity, 2.0)
+        and: "second product to scan which exists in stock"
+            def secondProductForScanning = new ScannedProductDTO()
+            secondProductForScanning.productName = "keyboard"
+            secondProductForScanning.quantity = 2
+            def createdProductTwo = createNewProductWithMultiPricePromo(secondProductForScanning.productName, 10.0, productForScanning.quantity, 8.0)
+        and:
+            def expectedReceiptWithPayment = 10.0
+        when: "receipt is being created"
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/receipt")).andReturn()
+            ReceiptDTO receiptDTO = mapper.readValue(result.getResponse().getContentAsString(), ReceiptDTO.class)
+        and: "first product is scanned"
+            mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptDTO.getReceiptId() + "/product")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(productForScanning)))
+        and: "second product is scanned"
+            mockMvc.perform(MockMvcRequestBuilders.patch("/receipt/" + receiptDTO.getReceiptId() + "/product")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(mapper.writeValueAsString(secondProductForScanning)))
+        and: "get receipt"
+            def calculatedReceiptResponse = mockMvc.perform(get("/receipt/" + receiptDTO.getReceiptId()))
+        then: "receipt has correct form and values and proper payment"
+            calculatedReceiptResponse.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(jsonPath('$.payment').value(expectedReceiptWithPayment))
+                    .andExpect(jsonPath('$.items').value(hasSize(2)))
+                    .andExpect(jsonPath('$.items[?(@.product.name==\'' + createdProductOne.name + '\')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.price==' + 2.0 + ')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.price==' + 8.0 + ')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.product.name==\'' + createdProductTwo.name + '\')]').exists())
+    }
+
     def createNewProduct(String name, Double price) {
         productService.createProduct(name, price)
+    }
+
+    def createNewProductWithMultiPricePromo(String name, Double price, Integer quantity, Double specialPrice) {
+        Optional<Product> product = productService.createProduct(name, price)
+        promoService.createMultiPricedPromo(name, quantity, specialPrice)
+        return product.get()
     }
 
     def createEmptyReceipt() {

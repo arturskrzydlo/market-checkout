@@ -5,6 +5,7 @@ import com.pragmaticcoders.checkout.checkoutcomponent.products.Product;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
@@ -15,7 +16,7 @@ import javax.persistence.ManyToOne;
     //TODO: add nullable false - overall check for validation and nullable fields
     @ManyToOne
     private Product product;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     private Receipt receipt;
     private int quantity;
     private Double price;

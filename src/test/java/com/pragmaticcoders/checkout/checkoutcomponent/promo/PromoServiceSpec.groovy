@@ -127,7 +127,6 @@ class PromoServiceSpec extends Specification {
         Product product = new Product()
         product.setName("toothbrush")
         product.setPrice(5.0)
-        product.setAmountInStorage(10)
         product.setId(1)
 
         return product

@@ -4,6 +4,7 @@ import com.pragmaticcoders.checkout.checkoutcomponent.general.AbstractDomainClas
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.util.HashSet;
@@ -13,7 +14,7 @@ import java.util.Set;
 @Getter
 @Setter class Receipt extends AbstractDomainClass {
 
-    @OneToMany(mappedBy = "receipt")
+    @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL)
     private Set<ReceiptItem> items = new HashSet<>();
     private boolean opened = true;
     private Double payment;
