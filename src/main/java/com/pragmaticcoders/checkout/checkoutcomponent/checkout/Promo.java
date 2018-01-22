@@ -4,10 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +16,9 @@ import java.util.Set;
     private Double specialPrice;
     private int unitAmount;
     private PromoType type;
+
+    @Transient
+    private boolean used = false;
 
     @ManyToMany
     @JoinTable(

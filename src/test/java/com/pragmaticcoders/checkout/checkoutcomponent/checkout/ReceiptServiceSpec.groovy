@@ -13,6 +13,10 @@ class ReceiptServiceSpec extends Specification {
     def productService = Mock(ProductService)
     def receiptService = new ReceiptServiceImpl(productRepository, receiptRepository, productService)
 
+    def headPhonesItem
+    def keyboardItem
+    def toothBrushItem
+
     @Shared
     def sampleProductToCheck = createToothBrushProduct()
     @Shared
@@ -130,8 +134,6 @@ class ReceiptServiceSpec extends Specification {
     }
 
 
-    // ========================================================================================================================================
-
     @Unroll
     Should "get real receipt payment after multipriced promotions application for #quantity unit of product"() {
         given: "existing receipt"
@@ -197,10 +199,80 @@ class ReceiptServiceSpec extends Specification {
             def result = receiptService.produceReceiptWithPayment(receipt.id)
         then:
             1 * receiptRepository.findOne(receipt.id) >> receipt
-            result.payment == 195
+            result.payment == 195 //value expected
 
     }
 
+
+    Should "return more beneficial price, when two combined promotions exists for single product"() {
+
+        given: "one receipt with combined promo for a sample product"
+            def receipt = createReceiptWith2CombinedPromos()
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            result.payment == 501.5 // this values comes from fact that toothbrush should be with promotion thus 1*(5.0-specialprice)=-15.0
+            // headphones should be 3(3 headphones and 3 keyboardS) * specialprice(105.5) = 316.5
+            // keyboard should be without promotions (because it was uses by headphone promo and tothbrush promo)
+            // 10*keyboardprice = 10*20 = 200. In total 501.5
+    }
+
+
+    Should "return price with combined promotions result when combined and multiprice promotions exists and combined is more beneficial"() {
+
+        given: "one receipt with combined and multipriced promo"
+            def receipt = createReceiptWithMultiPriceAndCombinedPromo()
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            result.payment == 501.5 //because combined promotions should be cheaper (multiprice promotions is just for one toothbrush)
+    }
+
+    Should "return price with multiprice promotiont when combined and multiprice promotions exists and multiprice is more beneficial"() {
+
+        given: "one receipt with combined and multipriced promo"
+            def receipt = createReceiptWithMultiPriceAndCombinedPromoWhereMultiPriceMoreBeneficial()
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            result.payment == 581.5 //because multiprice promotion give 65.0 instead of 700 for combined promotion
+    }
+
+    Should "all returned items on receipt have prices assigned to them"() {
+
+        given: "one receipt with 2 items"
+            def receipt = createReceiptWithTwoItems()
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            checkIfAllReceiptItemHasPriceAssignedToThem(result)
+    }
+
+    Should "all returned items on receipt have prices assigned to them and it should reflect promotion applied to them"() {
+
+        given: "one receipt with combined promo for a sample product"
+            def receipt = createReceiptWithMultiPricePromoForSingleItem()
+            receipt.items[0].setQuantity(30)
+        when:
+            def result = receiptService.produceReceiptWithPayment(receipt.id)
+        then:
+            1 * receiptRepository.findOne(receipt.id) >> receipt
+            receipt.items[0].price == 65.0
+
+    }
+
+    def checkIfAllReceiptItemHasPriceAssignedToThem(receipt) {
+        for (ReceiptItem receiptItem : receipt.items) {
+            if (receiptItem.price == null) {
+                return false
+            }
+        }
+        return true
+    }
 
     def createKeyBoardProduct() {
 
@@ -231,19 +303,33 @@ class ReceiptServiceSpec extends Specification {
 
     def create2ReceiptItemsList(Receipt receipt) {
 
-        ReceiptItem keyboardItem = new ReceiptItem()
+        keyboardItem = new ReceiptItem()
         keyboardItem.setQuantity(10)
         keyboardItem.setProduct(createKeyBoardProduct())
         keyboardItem.setId(2)
 
         receipt.addItem(keyboardItem)
 
-        ReceiptItem toothBrushItem = new ReceiptItem()
+        toothBrushItem = new ReceiptItem()
         toothBrushItem.setQuantity(1)
         toothBrushItem.setProduct(createToothBrushProduct())
         toothBrushItem.setId(3)
 
         receipt.addItem(toothBrushItem)
+
+        return receipt
+    }
+
+    def create3ReceiptItemsList(Receipt receipt) {
+
+        create2ReceiptItemsList(receipt)
+
+        headPhonesItem = new ReceiptItem()
+        headPhonesItem.setQuantity(3);
+        headPhonesItem.setProduct(createHeadPhonesProduct())
+        headPhonesItem.setId(4)
+
+        receipt.addItem(headPhonesItem)
 
         return receipt
     }
@@ -282,13 +368,13 @@ class ReceiptServiceSpec extends Specification {
         return promos
     }
 
-    def createCombinedPromoForReceiptItems(ReceiptItem receiptItem1, ReceiptItem receiptItem2) {
+    def createCombinedPromoForReceiptItems(ReceiptItem receiptItem1, ReceiptItem receiptItem2, Double discount) {
 
         Promo combinedPromo = new Promo()
         combinedPromo.setType(PromoType.COMBINED)
         combinedPromo.addProduct(receiptItem1.product)
         combinedPromo.addProduct(receiptItem2.product)
-        combinedPromo.setSpecialPrice(receiptItem2.product.getPrice() + receiptItem1.product.getPrice() - 10.0)
+        combinedPromo.setSpecialPrice(receiptItem2.product.getPrice() + receiptItem1.product.getPrice() - discount)
 
         return combinedPromo
     }
@@ -325,7 +411,41 @@ class ReceiptServiceSpec extends Specification {
 
         Receipt receipt = createFreshReceipt()
         receipt = create2ReceiptItemsList(receipt)
-        createCombinedPromoForReceiptItems(receipt.items[0], receipt.items[1])
+        createCombinedPromoForReceiptItems(receipt.items[0], receipt.items[1], 10)
+
+        return receipt
+    }
+
+    def createReceiptWith2CombinedPromos() {
+
+        Receipt receipt = createFreshReceipt()
+        receipt = create3ReceiptItemsList(receipt)
+        createCombinedPromoForReceiptItems(toothBrushItem, keyboardItem, 20)
+        createCombinedPromoForReceiptItems(keyboardItem, headPhonesItem, 50)
+
+        return receipt
+    }
+
+    def createReceiptWithMultiPriceAndCombinedPromo() {
+
+        Receipt receipt = createFreshReceipt()
+        create3ReceiptItemsList(receipt)
+        createCombinedPromoForReceiptItems(toothBrushItem, keyboardItem, 20)
+        createCombinedPromoForReceiptItems(keyboardItem, headPhonesItem, 50)
+        createMultiPricedPromoForSingleProduct(toothBrushItem)
+
+        return receipt
+    }
+
+    def createReceiptWithMultiPriceAndCombinedPromoWhereMultiPriceMoreBeneficial() {
+
+        Receipt receipt = createFreshReceipt()
+        create3ReceiptItemsList(receipt)
+        toothBrushItem.setQuantity(30)
+        toothBrushItem.getProduct().setPrice(30)
+        createCombinedPromoForReceiptItems(toothBrushItem, keyboardItem, 20)
+        createCombinedPromoForReceiptItems(keyboardItem, headPhonesItem, 50)
+        createMultiPricedPromoForSingleProduct(toothBrushItem)
 
         return receipt
     }
@@ -347,122 +467,4 @@ class ReceiptServiceSpec extends Specification {
         receipt.addItem(receiptItem)
 
     }
-
-    // ===========================================================================================================
-
-    /*
-
-
-
-
-      def createReceiptWithCombinedPromo(){
-
-          Receipt receipt = createReceiptWithReceiptItems()
-          createCombinedPromoForReceiptItems(receipt.items[0],receipt.items[1])
-          return receipt
-      }
-
-      def createManyMultiPricedPromosForSampleProduct(product) {
-
-          def promo1 = new Promo()
-          promo1.setUnitAmount(10)
-          promo1.setSpecialPrice(30)
-          promo1.addProduct(product)
-          promo1.setType(PromoType.MULTIPRICE)
-
-          def promo2 = new Promo()
-          promo2.setUnitAmount(20)
-          promo2.setSpecialPrice(35)
-          promo2.addProduct(product)
-          promo2.setType(PromoType.MULTIPRICE)
-
-          def promo3 = new Promo()
-          promo3.setUnitAmount(5)
-          promo3.setSpecialPrice(20)
-          promo3.addProduct(product)
-          promo3.setType(PromoType.MULTIPRICE)
-
-          List<Promo> promos = [promo1, promo2, promo3]
-          return promos
-
-      }
-
-      def createReceiptWithReceiptItemsWithPromos() {
-
-          Receipt receipt = createReceiptWithReceiptItems()
-
-          Promo promo1 = new Promo()
-          promo1.setUnitAmount(10)
-          promo1.setSpecialPrice(20.0)
-          promo1.setType(PromoType.MULTIPRICE)
-          promo1.addProduct(receipt.getItems()[0].product)
-
-          Promo promo2 = new Promo()
-          promo2.setUnitAmount(20)
-          promo2.setSpecialPrice(35)
-          promo2.setType(PromoType.MULTIPRICE)
-          promo2.addProduct(receipt.getItems()[1].product)
-
-          return receipt
-      }
-
-      def createProduct() {
-
-          Product product = new Product()
-          product.setId(1)
-          product.setName("toothbrush")
-          product.setPrice(5.0)
-
-          return product
-      }
-
-      def calculateExpectedSimpleReceiptPayment(Receipt receipt) {
-          def sum = 0
-          for (ReceiptItem item : receipt.items) {
-              sum = sum + item.quantity * item.product.price
-          }
-          receipt.setPayment(sum)
-          return receipt
-      }
-
-      def createReceiptWithReceiptItem() {
-
-          def receipt = createExistingReceiptWithoutReceiptItems()
-
-          ReceiptItem receiptItem = new ReceiptItem()
-          receiptItem.setQuantity(1)
-          receiptItem.setProduct(createProduct())
-          receiptItem.setId(1)
-
-          receipt.addItem(receiptItem)
-          return receipt
-      }
-
-      def createReceiptWithReceiptItems() {
-
-          def receipt = createReceiptWithReceiptItem()
-
-          Product keyboard = new Product()
-          keyboard.setName("keyboard")
-          keyboard.setPrice(20.0)
-
-          ReceiptItem keyboardItem = new ReceiptItem()
-          keyboardItem.setQuantity(10)
-          keyboardItem.setProduct(keyboard)
-          keyboardItem.setId(2)
-
-          receipt.addItem(keyboardItem)
-
-          return receipt
-      }
-
-
-      def createExistingReceiptWithoutReceiptItems() {
-
-          Receipt receipt = new Receipt()
-          receipt.setId(1)
-          return receipt
-      }
-
-  */
 }

@@ -13,4 +13,5 @@ import lombok.*;
     private ProductDTO product;
     private Integer receiptId;
     private Integer quantity;
+    private Double price;
 }

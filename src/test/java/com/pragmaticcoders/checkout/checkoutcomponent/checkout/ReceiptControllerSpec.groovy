@@ -126,6 +126,10 @@ class ReceiptControllerSpec extends Specification {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath('$.payment').value(equalTo(expectedReceiptWithPayment.payment)))
                     .andExpect(jsonPath('$.items').value(hasSize(expectedReceiptWithPayment.items.size())))
+                    .andExpect(jsonPath('$.items[?(@.product.name==\'' + receipt.items[0].product.name + '\')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.price==' + receipt.items[0].product.price * receipt.items[0].quantity + ')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.price==' + receipt.items[1].product.price * receipt.items[1].quantity + ')]').exists())
+                    .andExpect(jsonPath('$.items[?(@.product.name==\'' + receipt.items[1].product.name + '\')]').exists())
 
     }
 
@@ -200,6 +204,7 @@ class ReceiptControllerSpec extends Specification {
         toothBrushItem.setQuantity(3)
         toothBrushItem.setProduct(createProduct())
         toothBrushItem.setId(1)
+        toothBrushItem.setPrice(toothBrushItem.getQuantity() * toothBrushItem.product.price)
 
         ReceiptItem vacuumCleanerItem = new ReceiptItem()
         vacuumCleanerItem.setQuantity(1)
@@ -209,6 +214,7 @@ class ReceiptControllerSpec extends Specification {
         vacuumCleaner.setName("vacuumcleaner")
 
         vacuumCleanerItem.setProduct(vacuumCleaner)
+        vacuumCleanerItem.setPrice(vacuumCleanerItem.quantity * vacuumCleanerItem.product.price)
 
         receipt.addItem(toothBrushItem)
         receipt.addItem(vacuumCleanerItem)
