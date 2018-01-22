@@ -8,7 +8,7 @@ import spock.lang.Specification
 
 import java.lang.Void as Should
 
-class ProductPriceScannerSpec extends Specification {
+class ProductServiceSpec extends Specification {
 
     def sampleProductToCheck
     def productRepository = Mock(ProductRepository)
@@ -59,6 +59,32 @@ class ProductPriceScannerSpec extends Specification {
             exception.message == "Product with identity " + nonExistingProductName + " does not exists"
 
     }
+
+
+    Should "create new product with assigned it to it when price and name are specified"() {
+        given: "name and price of the product"
+            def price = 5.0
+            def name = "toothbrush"
+        when:
+            def createdProduct = producteService.createProduct()
+        then: "created product has correct price, name and not empty id"
+            createdProduct.price == price
+            createdProduct.name == name
+            createdProduct.id != null
+        and:
+            1 * productRepository.save(_) >> {
+                Product product = new Product()
+                product.setPrice(price)
+                product.setName(name)
+                return product
+            }
+
+
+    }
+
+/*    findProductByName
+    getAllProducts
+    createProduct*/
 
     def createManyPromosForSampleProduct() {
 
