@@ -1,10 +1,11 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.general.configuration;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration class AppConfiguration {
+@Configuration
+public class AppConfiguration {
 
     @Bean
     public ModelMapper modelMapper() {

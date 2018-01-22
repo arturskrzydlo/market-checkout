@@ -1,10 +1,10 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.promo;
 
-import org.springframework.stereotype.Service;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
 
 import java.util.List;
 
-@Service interface PromoService {
+public interface PromoService {
 
     Promo createMultiPricedPromo(String productName, Integer unitAmount, Double specialPrice)
             throws ProductNotFoundException;

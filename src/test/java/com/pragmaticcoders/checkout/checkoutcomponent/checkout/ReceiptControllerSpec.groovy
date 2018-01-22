@@ -1,6 +1,8 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException
 import org.modelmapper.ModelMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -41,7 +43,7 @@ class ReceiptControllerSpec extends Specification {
             def expectedResult = product.getPrice() * scannedProduct.getQuantity()
             def existingReceiptId = 1
         when: "product is scanned"
-            def result = mockMvc.perform(put("/receipt/" + existingReceiptId)
+            def result = mockMvc.perform(patch("/receipt/" + existingReceiptId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
@@ -60,7 +62,7 @@ class ReceiptControllerSpec extends Specification {
             def scannedProduct = createScannedProduct()
             def receiptId = 10
         when:
-            def result = this.mockMvc.perform(put("/receipt/" + receiptId)
+            def result = this.mockMvc.perform(patch("/receipt/" + receiptId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:
@@ -82,7 +84,7 @@ class ReceiptControllerSpec extends Specification {
             def scannedProduct = createScannedProduct()
             def receiptId = 10
         when:
-            def result = this.mockMvc.perform(put("/receipt/" + receiptId)
+            def result = this.mockMvc.perform(patch("/receipt/" + receiptId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .content(mapper.writeValueAsString(scannedProduct)))
         then:

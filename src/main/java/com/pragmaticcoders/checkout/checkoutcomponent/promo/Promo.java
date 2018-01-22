@@ -1,5 +1,7 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.promo;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.general.AbstractDomainClass;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +13,8 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = "products") class Promo extends AbstractDomainClass {
+@EqualsAndHashCode(exclude = "products")
+public class Promo extends AbstractDomainClass {
 
     private Double specialPrice;
     private int unitAmount;

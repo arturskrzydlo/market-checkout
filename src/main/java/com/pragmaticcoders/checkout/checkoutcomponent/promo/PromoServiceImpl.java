@@ -1,24 +1,29 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.promo;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 class PromoServiceImpl implements PromoService {
 
     private PromoRepository promoRepository;
-    private ProductRepository productRepository;
+    private ProductService productService;
 
     @Autowired
-    public PromoServiceImpl(PromoRepository promoRepository, ProductRepository productRepository) {
+    public PromoServiceImpl(PromoRepository promoRepository, ProductService productService) {
         this.promoRepository = promoRepository;
-        this.productRepository = productRepository;
+        this.productService = productService;
     }
 
     @Override public Promo createMultiPricedPromo(String productName, Integer unitAmount, Double specialPrice)
             throws ProductNotFoundException {
 
-        Product product = getProductByProductName(productName);
+        Product product = productService.findProductByName(productName);
 
         Promo promo = new Promo();
         promo.addProduct(product);
@@ -30,18 +35,8 @@ class PromoServiceImpl implements PromoService {
     }
 
     @Override public List<Promo> getAllPromotionsForProduct(String productName) throws ProductNotFoundException {
-        getProductByProductName(productName);
+        productService.findProductByName(productName);
         List<Promo> promos = promoRepository.findByProducts_Name(productName);
         return promos;
-    }
-
-    private Product getProductByProductName(String productName) throws ProductNotFoundException {
-
-        Product product = productRepository.findByName(productName);
-        if (product == null) {
-            throw new ProductNotFoundException(productName);
-        }
-
-        return product;
     }
 }

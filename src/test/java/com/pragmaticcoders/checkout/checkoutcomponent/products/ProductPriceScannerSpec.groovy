@@ -1,5 +1,8 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout
+package com.pragmaticcoders.checkout.checkoutcomponent.products
 
+import com.pragmaticcoders.checkout.checkoutcomponent.checkout.ReceiptItem
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoType
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -20,7 +23,6 @@ class ProductPriceScannerSpec extends Specification {
     @Shared
     def productPrice = createSampleProduct().getPrice()
 
-    //TODO fix to be possible to run just one test
     def setup() {
         sampleProductToCheck = createSampleProduct()
         createManyPromosForSampleProduct()
@@ -58,9 +60,6 @@ class ProductPriceScannerSpec extends Specification {
 
     }
 
-
-
-
     def createManyPromosForSampleProduct() {
 
         Product sampleProduct = createSampleProduct()
@@ -83,7 +82,6 @@ class ProductPriceScannerSpec extends Specification {
         return promos
 
     }
-
 
     def addTwoReceiptItemsToReceiptList(Product product1, Product product2) {
         def setOfOtherProducts = []

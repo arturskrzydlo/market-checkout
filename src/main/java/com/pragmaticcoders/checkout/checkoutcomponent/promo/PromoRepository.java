@@ -1,4 +1,4 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.promo;
 
 import org.springframework.data.repository.CrudRepository;
 

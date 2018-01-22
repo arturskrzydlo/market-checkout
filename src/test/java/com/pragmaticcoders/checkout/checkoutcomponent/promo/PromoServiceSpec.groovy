@@ -1,5 +1,8 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout
+package com.pragmaticcoders.checkout.checkoutcomponent.promo
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService
 import spock.lang.Specification
 
 import java.lang.Void as Should
@@ -8,9 +11,9 @@ class PromoServiceSpec extends Specification {
 
     def sampleProductToCheck = createSampleProduct()
     def samplePromo = createSamplePromo()
-    def productRepository = Mock(ProductRepository)
     def promoRepository = Mock(PromoRepository)
-    def promoService = new PromoServiceImpl(promoRepository, productRepository)
+    def productService = Mock(ProductService)
+    def promoService = new PromoServiceImpl(promoRepository, productService)
 
 
     Should "sucessfully create multi-priced promo for specified amount of units"() {
@@ -21,7 +24,7 @@ class PromoServiceSpec extends Specification {
         and: "price for product when reach required units number"
             def specialPrice = samplePromo.getSpecialPrice()
         and: "product on which promo will be applied exists"
-            productRepository.findByName(sampleProductToCheck.getName()) >> sampleProductToCheck
+            productService.findProductByName(sampleProductToCheck.getName()) >> sampleProductToCheck
 
         when: "creating promo"
             def resultPromo = promoService.createMultiPricedPromo(sampleProductToCheck.getName(), unitsAmount, specialPrice)
@@ -33,7 +36,7 @@ class PromoServiceSpec extends Specification {
                     assert promo.getProducts().contains(sampleProductToCheck)
                     return samplePromo
             }
-            1 * productRepository.findByName(sampleProductToCheck.getName()) >> sampleProductToCheck
+            1 * productService.findProductByName(sampleProductToCheck.getName()) >> sampleProductToCheck
 
 
     }
@@ -45,13 +48,15 @@ class PromoServiceSpec extends Specification {
             def unitsAmount = samplePromo.getUnitAmount()
         and: "price for product when reach required units number"
             def specialPrice = samplePromo.getSpecialPrice()
-        and: "product on which promo will be applied exists"
-            productRepository.findByName(sampleProductToCheck.getName()) >> null
         when:
             promoService.createMultiPricedPromo(productName, unitsAmount, specialPrice)
         then:
             ProductNotFoundException exception = thrown()
             exception.message == "Product with identity " + productName + " does not exists"
+        and:
+            1 * productService.findProductByName(productName) >> {
+                throw new ProductNotFoundException(productName)
+            }
         and:
             0 * promoRepository.save(_)
     }
@@ -66,20 +71,22 @@ class PromoServiceSpec extends Specification {
         then:
             !allResults.isEmpty()
             allResults.size() == manyPromosForSampleProduct.size()
-            1 * productRepository.findByName(productName) >> sampleProductToCheck
+            1 * productService.findProductByName(productName) >> sampleProductToCheck
             1 * promoRepository.findByProducts_Name(productName) >> manyPromosForSampleProduct
     }
 
     Should "throw ProductNotFoundException when product name doesn't exists when getting all promotions"() {
         given: "sample product name which doesn't exists"
             def productName = "notExistingProductName"
-        and: "product on which promo will be applied exists"
-            productRepository.findByName(sampleProductToCheck.getName()) >> null
         when:
             promoService.getAllPromotionsForProduct(productName)
         then:
             ProductNotFoundException exception = thrown()
             exception.message == "Product with identity " + productName + " does not exists"
+        and:
+            1 * productService.findProductByName(productName) >> {
+                throw new ProductNotFoundException(productName)
+            }
     }
 
 

@@ -1,5 +1,10 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService;
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo;
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,14 +14,11 @@ import java.util.stream.Collectors;
 
 @Service class ReceiptServiceImpl implements ReceiptService {
 
-    private ProductRepository productRepository;
     private ReceiptRepository receiptRepository;
     private ProductService productService;
 
     @Autowired
-    public ReceiptServiceImpl(ProductRepository productRepository, ReceiptRepository receiptRepository,
-            ProductService productService) {
-        this.productRepository = productRepository;
+    public ReceiptServiceImpl(ReceiptRepository receiptRepository, ProductService productService) {
         this.receiptRepository = receiptRepository;
         this.productService = productService;
     }
@@ -26,7 +28,7 @@ import java.util.stream.Collectors;
     public Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)
             throws ProductNotFoundException, ReceiptNotFoundException {
 
-        Product productFromRepo = getProductByProductName(product.getProductName());
+        Product productFromRepo = productService.findProductByName(product.getProductName());
         Receipt receipt = updateReceipt(productFromRepo, receiptId, product.getQuantity());
         receiptRepository.save(receipt);
         return productFromRepo.getPrice() * product.getQuantity();
@@ -271,16 +273,5 @@ import java.util.stream.Collectors;
         }
 
         return receipt;
-    }
-
-    //TODO: move it to product service - it's redundant with promo service impl
-    private Product getProductByProductName(String productName) throws ProductNotFoundException {
-
-        Product product = productRepository.findByName(productName);
-        if (product == null) {
-            throw new ProductNotFoundException(productName);
-        }
-
-        return product;
     }
 }

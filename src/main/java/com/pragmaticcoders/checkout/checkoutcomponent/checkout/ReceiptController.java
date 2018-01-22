@@ -1,5 +1,6 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,7 @@ import java.util.Map;
     private ModelMapper modelMapper;
 
     //TODO maybe update whole receipt - > change scannedProductDTO to ReceiptDTO
-    @PutMapping("/{receiptId}")
+    @PatchMapping("/{receiptId}")
     public Map<String, Double> scanProduct(@RequestBody ScannedProductDTO scannedProductDTO,
             @PathVariable Integer receiptId) throws ProductNotFoundException, ReceiptNotFoundException {
         return Collections.singletonMap("price", receiptService.addProductToReceipt(scannedProductDTO, receiptId));
@@ -31,7 +32,6 @@ import java.util.Map;
 
     @GetMapping("/{receiptId}")
     public ReceiptDTO getReceiptWithPayment(@PathVariable Integer receiptId) throws ReceiptNotFoundException {
-
         return convertToDTO(receiptService.produceReceiptWithPayment(receiptId));
     }
 

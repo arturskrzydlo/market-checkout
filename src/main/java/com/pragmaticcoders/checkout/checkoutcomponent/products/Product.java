@@ -1,5 +1,7 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.products;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.general.AbstractDomainClass;
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +14,8 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = "promos") class Product extends AbstractDomainClass {
+@EqualsAndHashCode(exclude = "promos")
+public class Product extends AbstractDomainClass {
 
     //TODO: is it really good to get product by product name ?
     private String name;

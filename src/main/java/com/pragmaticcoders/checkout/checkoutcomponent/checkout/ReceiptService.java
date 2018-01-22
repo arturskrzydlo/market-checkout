@@ -1,5 +1,7 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
+
 interface ReceiptService {
 
     Double addProductToReceipt(ScannedProductDTO product, Integer receiptId)

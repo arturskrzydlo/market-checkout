@@ -1,5 +1,10 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout
 
+import com.pragmaticcoders.checkout.checkoutcomponent.products.Product
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoType
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -8,10 +13,9 @@ import java.lang.Void as Should
 
 class ReceiptServiceSpec extends Specification {
 
-    def productRepository = Mock(ProductRepository)
     def receiptRepository = Mock(ReceiptRepository)
     def productService = Mock(ProductService)
-    def receiptService = new ReceiptServiceImpl(productRepository, receiptRepository, productService)
+    def receiptService = new ReceiptServiceImpl(receiptRepository, productService)
 
     def headPhonesItem
     def keyboardItem
@@ -33,7 +37,7 @@ class ReceiptServiceSpec extends Specification {
         when: "add product has been called"
             def result = receiptService.addProductToReceipt(scannedProduct, existingReceipt.getId())
         then:
-            1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
+            1 * productService.findProductByName(scannedProduct.getProductName()) >> productFound
         and:
             result == productFound.getPrice() * scannedProduct.quantity
 
@@ -50,7 +54,7 @@ class ReceiptServiceSpec extends Specification {
         when: "add product has been called"
             receiptService.addProductToReceipt(scannedProduct, existingReceipt.getId())
         then:
-            1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
+            1 * productService.findProductByName(scannedProduct.getProductName()) >> productFound
         and:
             1 * receiptRepository.save(_) >> {
                 Receipt receipt1 ->
@@ -71,7 +75,7 @@ class ReceiptServiceSpec extends Specification {
         when: "add product has been called"
             receiptService.addProductToReceipt(scannedProduct, existingReceipt.getId())
         then:
-            1 * productRepository.findByName(scannedProduct.getProductName()) >> productFound
+            1 * productService.findProductByName(scannedProduct.getProductName()) >> productFound
         and:
             1 * receiptRepository.save(_) >> {
                 Receipt receipt1 ->
@@ -86,22 +90,26 @@ class ReceiptServiceSpec extends Specification {
         and:
             def nonExistingProduct = createToothBrushProduct()
         and:
-            productRepository.findByName(scannedProduct.getProductName()) >> null
+
         when:
             receiptService.addProductToReceipt(scannedProduct, 1)
         then:
             ProductNotFoundException exception = thrown()
             exception.message == "Product with identity " + nonExistingProduct.getName() + " does not exists"
+        and:
+            1 * productService.findProductByName(scannedProduct.getProductName()) >> {
+                throw new ProductNotFoundException(nonExistingProduct.getName())
+            }
     }
 
-    Should "throw ReceiptNotFoundException if product name doesn't exists"() {
+    Should "throw ReceiptNotFoundException if receipt doesn't exists"() {
         given: "scanned product with name and quantity"
             def scannedProduct = createScannedProduct()
         and:
             def nonExistingReceipt = createFreshReceipt()
             def productFound = createToothBrushProduct()
         and:
-            productRepository.findByName(scannedProduct.getProductName()) >> productFound
+            productService.findProductByName(scannedProduct.getProductName()) >> productFound
         and:
             receiptRepository.findOne(nonExistingReceipt.getId()) >> null
         when:

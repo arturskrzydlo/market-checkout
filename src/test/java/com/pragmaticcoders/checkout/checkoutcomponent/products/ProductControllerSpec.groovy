@@ -1,5 +1,7 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout
+package com.pragmaticcoders.checkout.checkoutcomponent.products
 
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.Promo
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoService
 import org.hamcrest.Matchers
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest

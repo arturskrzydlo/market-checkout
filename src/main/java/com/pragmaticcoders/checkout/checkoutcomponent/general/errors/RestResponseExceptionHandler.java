@@ -1,4 +1,4 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.general.errors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

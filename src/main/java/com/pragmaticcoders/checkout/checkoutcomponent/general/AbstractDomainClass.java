@@ -1,4 +1,4 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.general;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -6,7 +6,8 @@ import java.util.Date;
 /**
  * Created by jt on 12/16/15.
  */
-@MappedSuperclass class AbstractDomainClass {
+@MappedSuperclass
+public class AbstractDomainClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

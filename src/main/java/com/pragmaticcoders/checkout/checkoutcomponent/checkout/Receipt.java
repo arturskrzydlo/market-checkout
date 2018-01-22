@@ -1,5 +1,6 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
 
+import com.pragmaticcoders.checkout.checkoutcomponent.general.AbstractDomainClass;
 import lombok.Getter;
 import lombok.Setter;
 

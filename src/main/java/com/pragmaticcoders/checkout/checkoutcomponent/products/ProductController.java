@@ -1,4 +1,4 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.products;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,6 @@ import java.util.Map;
     public Map<String, Double> scanProduct(@PathVariable String productName) throws ProductNotFoundException {
         return Collections.singletonMap("price", productService.findActualPriceForProduct(productName));
     }
-
 
     @Autowired
     public void setProductService(ProductService productService) {

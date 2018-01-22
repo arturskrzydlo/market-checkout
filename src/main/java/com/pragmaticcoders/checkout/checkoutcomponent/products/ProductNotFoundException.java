@@ -1,6 +1,8 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.products;
 
-class ProductNotFoundException extends ResourceNotFoundException {
+import com.pragmaticcoders.checkout.checkoutcomponent.general.errors.ResourceNotFoundException;
+
+public class ProductNotFoundException extends ResourceNotFoundException {
 
     private static final String RESOURCE_NAME = "Product";
 

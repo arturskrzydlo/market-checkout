@@ -1,8 +1,8 @@
-package com.pragmaticcoders.checkout.checkoutcomponent.checkout;
+package com.pragmaticcoders.checkout.checkoutcomponent.general.errors;
 
 import java.text.MessageFormat;
 
-class ResourceNotFoundException extends Exception {
+public class ResourceNotFoundException extends Exception {
 
     private static final String MESSAGE = "{0} with identity {1} does not exists";
     String identity;
