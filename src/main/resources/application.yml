@@ -3,6 +3,9 @@ spring:
         console:
             enabled: true
             path: /console/
+    profiles:
+      active: application
+
 server:
   port: 8080
   context-path: /checkout

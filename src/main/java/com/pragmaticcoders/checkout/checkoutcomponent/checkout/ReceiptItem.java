@@ -13,7 +13,6 @@ import javax.persistence.ManyToOne;
 @Getter
 @Setter class ReceiptItem extends AbstractDomainClass {
 
-    //TODO: add nullable false - overall check for validation and nullable fields
     @ManyToOne
     private Product product;
     @ManyToOne(cascade = CascadeType.ALL)

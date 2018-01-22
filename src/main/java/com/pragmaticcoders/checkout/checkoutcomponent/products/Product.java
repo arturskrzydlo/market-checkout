@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = "promos")
 public class Product extends AbstractDomainClass {
 
-    //TODO: is it really good to get product by product name ?
+    @Column(unique = true)
     private String name;
     private Double price;
     @ManyToMany(mappedBy = "products")

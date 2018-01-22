@@ -1,11 +1,20 @@
 package com.pragmaticcoders.checkout.checkoutcomponent.general;
 
-//@Component
-public class CheckoutBootstrap /*implements ApplicationListener<ContextRefreshedEvent>*/ {
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductNotFoundException;
+import com.pragmaticcoders.checkout.checkoutcomponent.products.ProductService;
+import com.pragmaticcoders.checkout.checkoutcomponent.promo.PromoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
-  /*  @Autowired PromoService promoService;
+@Component
+@Profile("application")
+public class CheckoutBootstrap implements ApplicationListener<ContextRefreshedEvent> {
+
+    @Autowired PromoService promoService;
     @Autowired ProductService productService;
-    @Autowired ReceiptService receiptService;
 
     private final String toothbrush = "toothbrush";
     private final String keyboard = "keyboard";
@@ -32,5 +41,5 @@ public class CheckoutBootstrap /*implements ApplicationListener<ContextRefreshed
         productService.createProduct(toothbrush, 5.0);
         productService.createProduct(keyboard,20.0);
         productService.createProduct(headphones,150.0);
-    }*/
+    }
 }
