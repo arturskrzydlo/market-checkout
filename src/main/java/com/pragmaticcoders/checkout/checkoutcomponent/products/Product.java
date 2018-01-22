@@ -20,7 +20,6 @@ public class Product extends AbstractDomainClass {
     //TODO: is it really good to get product by product name ?
     private String name;
     private Double price;
-    private int amountInStorage;
     @ManyToMany(mappedBy = "products")
     private Set<Promo> promos = new HashSet<>();
 

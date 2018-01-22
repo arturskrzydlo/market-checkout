@@ -29,6 +29,18 @@ import java.util.stream.StreamSupport;
         return product.orElseThrow(() -> new ProductNotFoundException(productName));
     }
 
+    @Override public Optional<Product> createProduct(String name, Double price) {
+
+        if (name == null || name.isEmpty() || price == null) {
+            return Optional.empty();
+        }
+
+        Product product = new Product();
+        product.setName(name);
+        product.setPrice(price);
+        return Optional.of(productRepository.save(product));
+    }
+
     @Override public List<Product> getAllProducts() {
         return StreamSupport.stream(productRepository.findAll().spliterator(), false)
                 .collect(Collectors.toList());
