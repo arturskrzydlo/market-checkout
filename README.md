@@ -30,7 +30,7 @@ to application. Actually three products along with promos. When you want to run 
  
  ## 4. Assumptions - what checkout component do ##
  
- Checkout component is REST component which handle simple market checkout operations. By market I mean physical market like Tesco for
+ Checkout component is REST component which handle simple market checkout operations. By market I mean real market like Tesco for
  instance. I was trying to imagine simple scenario, when new customer is processed. Such scenario consists of few steps. 
  
  - new receipt is created/opened
@@ -59,7 +59,17 @@ to application. Actually three products along with promos. When you want to run 
  quite well, it should count best possible option. For Combined I had a lot of issues with different corner cases, thus I've decided to implement 
  simplified version which just take biggest special price (special price is price for combined product).
  
- ## 5. Code structure ##
+ ## 5. Using application ##
+ 
+ The best usage of application is with postman or curl, to call http request to checkout component. We could do this in following steps (unfortunately missing HATEOAS :( )
+ 
+ - GET /checkout/products  - get all products, with their names, prices and assigned promos
+ - POST /checkout/receipts - create new receipt, to add products to that receipt
+ - PATCH /checkout/receipts/1/products - update products list (empty at the beginning) with new scanned product , for instance  {"quantity":3,"product_name":"keyboard"}
+ - GET /checkout/receipts/1 - get receipt with calculated final payment
+ - PATCH /checkout/receipt/1 - { "opened":"false" } -close receipt
+ 
+ ## 6. Code structure ##
  
  Firstly I wanted to make only one/two points of entry to module. This would be Controllers for receipts and products resources. Unfortunately
  when number of classes grown some structure was needed. Because of that some classes became public.
@@ -71,4 +81,5 @@ to application. Actually three products along with promos. When you want to run 
  and their buisness services. Project has simple structure which consists from 3 business modules (checkout,product,promo) and one for general usage,
  which has some common abstractions, error handling etc. Acceptance tests are placed in ScanningProductsAcceptSpec
  
+ I was trying to write this component with TDD approach, however it was not fully tdd, there were some parts, especially at the end of development, where I firstly write implementations, and tests later
  
